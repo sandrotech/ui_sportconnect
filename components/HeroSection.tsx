@@ -26,8 +26,8 @@ export default function HeroSection() {
                 <Image
                     src="/logo_sportconnect.png"
                     alt="SportConnect símbolo"
-                    width={280}
-                    height={280}
+                    width={500}
+                    height={500}
                     className="object-contain drop-shadow-md hover:scale-[1.05] transition-transform"
                 />
             </div>
