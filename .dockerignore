@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+coverage
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log
+.yarn
+.pnpm-store
