@@ -1,8 +1,7 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Activity, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -20,7 +19,9 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <ImageWithFallback src="/logo_simbolo.png" alt="SportConnect" className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center shadow-lg shadow-[#ff4b00]/20 group-hover:shadow-[#ff4b00]/40 transition-all group-hover:scale-105">
+              <Activity className="w-7 h-7 text-white" />
+            </div>
             <div>
               <h1 className="font-montserrat italic font-semibold text-xl text-white">SportConnect</h1>
               <p className="text-xs text-white/60">Conecte. Jogue. Evolua.</p>
@@ -30,60 +31,12 @@ export function Header() {
           {/* Desktop Navigation */}
           {!user && (
             <nav className="hidden md:flex items-center gap-8">
-              <NavLink
-                to="/arenas"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Arenas
-              </NavLink>
-              <NavLink
-                to="/atletas"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Atletas
-              </NavLink>
-              <NavLink
-                to="/profissionais"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Profissionais
-              </NavLink>
-              <NavLink
-                to="/marketplace"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Marketplace
-              </NavLink>
-              <NavLink
-                to="/blog"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Blog
-              </NavLink>
-              <NavLink
-                to="/contato"
-                end
-                className={({ isActive }) =>
-                  `relative px-1 transition-colors ${isActive ? "text-white after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-[#004ef9] after:to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-                }
-              >
-                Contato
-              </NavLink>
+              <Link to="/arenas" className="text-white/80 hover:text-white transition-colors">Arenas</Link>
+              <Link to="/atletas" className="text-white/80 hover:text-white transition-colors">Atletas</Link>
+              <Link to="/profissionais" className="text-white/80 hover:text-white transition-colors">Profissionais</Link>
+              <Link to="/marketplace" className="text-white/80 hover:text-white transition-colors">Marketplace</Link>
+              <Link to="/blog" className="text-white/80 hover:text-white transition-colors">Blog</Link>
+              <Link to="/contato" className="text-white/80 hover:text-white transition-colors">Contato</Link>
             </nav>
           )}
 
@@ -124,60 +77,12 @@ export function Header() {
         {/* Mobile Menu */}
         {!user && mobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-white/10 space-y-2">
-            <NavLink
-              to="/arenas"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Arenas
-            </NavLink>
-            <NavLink
-              to="/atletas"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Atletas
-            </NavLink>
-            <NavLink
-              to="/profissionais"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Profissionais
-            </NavLink>
-            <NavLink
-              to="/marketplace"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Marketplace
-            </NavLink>
-            <NavLink
-              to="/blog"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Blog
-            </NavLink>
-            <NavLink
-              to="/contato"
-              end
-              className={({ isActive }) =>
-                `block py-2 transition-colors ${isActive ? "text-transparent bg-clip-text bg-gradient-to-r from-[#004ef9] to-[#ff4b00]" : "text-white/80 hover:text-white"}`
-              }
-            >
-              Contato
-            </NavLink>
+            <Link to="/arenas" className="block py-2 text-white/80 hover:text-white transition-colors">Arenas</Link>
+            <Link to="/atletas" className="block py-2 text-white/80 hover:text-white transition-colors">Atletas</Link>
+            <Link to="/profissionais" className="block py-2 text-white/80 hover:text-white transition-colors">Profissionais</Link>
+            <Link to="/marketplace" className="block py-2 text-white/80 hover:text-white transition-colors">Marketplace</Link>
+            <Link to="/blog" className="block py-2 text-white/80 hover:text-white transition-colors">Blog</Link>
+            <Link to="/contato" className="block py-2 text-white/80 hover:text-white transition-colors">Contato</Link>
           </nav>
         )}
       </div>
