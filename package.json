@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "preview": "vite preview --host --port ${PORT:-4173}",
+    "start": "vite preview --host --port ${PORT:-4173}"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
