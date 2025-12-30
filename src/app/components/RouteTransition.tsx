@@ -6,9 +6,9 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
     const { pathname } = useLocation();
     const reduceMotion = useReducedMotion();
 
-    const initial = reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 };
-    const animate = { opacity: 1, y: 0 };
-    const exit = reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 };
+    const initial = reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 8, filter: "blur(6px)" };
+    const animate = { opacity: 1, y: 0, filter: "blur(0px)" };
+    const exit = reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: -6, filter: "blur(6px)" };
 
     return (
         <AnimatePresence mode="wait" initial={false}>
@@ -18,7 +18,7 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
                 initial={initial}
                 animate={animate}
                 exit={exit}
-                transition={{ duration: 0.28, ease: "easeOut" }}
+                transition={{ duration: 0.32, ease: "easeOut" }}
                 className="min-h-[calc(100vh-5rem)]"
             >
                 {children}

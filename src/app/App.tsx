@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { RouteChangeLoader } from './components/RouteChangeLoader';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { ArenaDashboard } from './pages/dashboard/ArenaDashboard';
@@ -197,6 +198,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteChangeLoader />
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
