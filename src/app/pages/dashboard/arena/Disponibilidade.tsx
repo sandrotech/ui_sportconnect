@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Plus, Edit2, Lock, Unlock, Clock, DollarSign, Save } from 'lucide-react';
 
 export function Disponibilidade() {
@@ -33,7 +34,12 @@ export function Disponibilidade() {
   };
 
   return (
-    <div className="p-8">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.36, ease: 'easeOut' }}
+      className="p-8"
+    >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -261,6 +267,6 @@ export function Disponibilidade() {
           </li>
         </ul>
       </div>
-    </div>
+    </motion.div>
   );
 }

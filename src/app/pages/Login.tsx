@@ -140,7 +140,11 @@ export function Login() {
   const Icon = config.icon;
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 relative">
+      <div className="lg:hidden absolute inset-0">
+        <img src={config.bg} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/30 to-[#000273]/10" />
+      </div>
       {/* Left Side - Image */}
       <div className="hidden lg:block relative bg-[#000273]">
         <img src={config.bg} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40" />
@@ -161,11 +165,11 @@ export function Login() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-white">
+      <div className="relative z-10 flex items-center justify-center p-8 bg-transparent lg:bg-gradient-to-br lg:from-gray-50 lg:to-white">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md rounded-3xl bg-white/50 backdrop-blur-md shadow-xl border border-white/30 p-8"
         >
           <button
             onClick={() => setSelectedType(null)}
@@ -218,9 +222,9 @@ export function Login() {
                 <input type="checkbox" className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]" />
                 <span className="ml-2 text-sm text-gray-600">Lembrar-me</span>
               </label>
-              <a href="#" className="text-sm text-[#004ef9] hover:text-[#0066ff]">
+              <Link to="/esqueceu-senha" className="text-sm text-[#004ef9] hover:text-[#0066ff]">
                 Esqueceu a senha?
-              </a>
+              </Link>
             </div>
 
             <button
@@ -232,9 +236,9 @@ export function Login() {
 
             <div className="text-center text-sm text-gray-600">
               Não tem uma conta?{' '}
-              <a href="#" className="text-[#004ef9] hover:text-[#0066ff] font-semibold">
+              <Link to="/cadastro" className="text-[#004ef9] hover:text-[#0066ff] font-semibold">
                 Cadastre-se
-              </a>
+              </Link>
             </div>
           </form>
         </motion.div>

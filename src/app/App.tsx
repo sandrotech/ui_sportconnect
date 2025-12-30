@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { RouteChangeLoader } from './components/RouteChangeLoader';
+import { motion } from 'framer-motion';
+import { DollarSign, Users, FileBarChart, Settings, Calendar, Mail, Phone, MapPin, BookOpen, ShoppingBag, Star, Shield, Briefcase } from 'lucide-react';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { ArenaDashboard } from './pages/dashboard/ArenaDashboard';
@@ -10,6 +12,21 @@ import { ArenaHome } from './pages/dashboard/arena/ArenaHome';
 import { Disponibilidade } from './pages/dashboard/arena/Disponibilidade';
 import { AtletaDashboard } from './pages/dashboard/AtletaDashboard';
 import { ProfissionalDashboard } from './pages/dashboard/ProfissionalDashboard';
+import { ProfissionalHome } from './pages/dashboard/profissional/ProfissionalHome';
+import { Oportunidades } from './pages/dashboard/profissional/Oportunidades';
+import { Agenda } from './pages/dashboard/profissional/Agenda';
+import { Historico } from './pages/dashboard/profissional/Historico';
+import { Comissoes } from './pages/dashboard/profissional/Comissoes';
+import { PerfilPublico } from './pages/dashboard/profissional/PerfilPublico';
+import { AtletaHome } from './pages/dashboard/atleta/AtletaHome';
+import { ExplorarArenas } from './pages/dashboard/atleta/ExplorarArenas';
+import { MinhasReservas } from './pages/dashboard/atleta/MinhasReservas';
+import { RankingELO } from './pages/dashboard/atleta/RankingELO';
+import { Grupos } from './pages/dashboard/atleta/Grupos';
+import { Carteira } from './pages/dashboard/atleta/Carteira';
+import { Estatisticas } from './pages/dashboard/atleta/Estatisticas';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { Cadastro } from './pages/Cadastro';
 
 // Simple placeholder pages for institutional sections
 function Arenas() {
@@ -45,11 +62,17 @@ function Atletas() {
         <p className="text-xl text-gray-600 mb-12">Encontre quadras, acompanhe seu ranking e evolua no esporte</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {['Reservas Rápidas', 'Ranking ELO', 'Grupos', 'Carteira Digital'].map((feature, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 shadow-lg">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: i * 0.08 }}
+              className="bg-white rounded-2xl p-6 shadow-lg"
+            >
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] mb-4" />
               <h3 className="font-semibold text-lg text-[#000273] mb-2">{feature}</h3>
               <p className="text-gray-600 text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -62,9 +85,241 @@ function Profissionais() {
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
+      <div className="relative">
+        <div className="h-[320px] md:h-[420px] relative">
+          <img
+            src="https://images.unsplash.com/photo-1659411587993-4aa949993f25?auto=format&fit=crop&w=1600&q=60"
+            alt="Profissionais"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#000273]/80 to-[#000273]/60" />
+          <div className="relative z-10 container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: -24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="font-montserrat italic font-semibold text-4xl md:text-5xl text-white"
+            >
+              Para Profissionais <span className="text-[#ff4b00]">do Esporte</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+              className="text-white/80 mt-3"
+            >
+              Juízes, professores e técnicos: encontre oportunidades, gerencie sua agenda e receba comissões automaticamente.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+              className="mt-6"
+            >
+              <a
+                href="/cadastro"
+                className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff4b00] to-[#ff6b00] text-white font-semibold hover:shadow-lg transition-all"
+              >
+                Cadastre-se como Profissional
+              </a>
+            </motion.div>
+          </div>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-16">
-        <h1 className="font-montserrat italic font-semibold text-4xl text-[#000273] mb-6">Profissionais</h1>
-        <p className="text-xl text-gray-600 mb-8">Juízes, professores e técnicos: amplie sua visibilidade e gerencie sua agenda</p>
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Benefícios para Profissionais
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Mais Visibilidade</h3>
+            <p className="text-gray-600 mt-2">Seja encontrado por arenas e atletas da sua região</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-4">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Agenda Centralizada</h3>
+            <p className="text-gray-600 mt-2">Gerencie todas suas atividades em um só lugar</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center mb-4">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Pagamento Automático</h3>
+            <p className="text-gray-600 mt-2">Receba suas comissões via PIX imediatamente</p>
+          </motion.div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.3 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center mb-4">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Avaliações e Reputação</h3>
+            <p className="text-gray-600 mt-2">Construa sua reputação com feedbacks de clientes</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.4 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Mais Oportunidades</h3>
+            <p className="text-gray-600 mt-2">Acesse ofertas de trabalho de múltiplas arenas</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.5 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-4">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Segurança Jurídica</h3>
+            <p className="text-gray-600 mt-2">Contratos digitais e proteção de ambas as partes</p>
+          </motion.div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 pb-16">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Para Todos os Profissionais
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">⚖️</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Árbitros e Juízes</h3>
+            <p className="text-gray-600 mt-2">Apite partidas oficiais e amistosas. Defina sua disponibilidade e aceite ofertas.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">🎓</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Professores e Coaches</h3>
+            <p className="text-gray-600 mt-2">Ofereça aulas particulares ou em grupo. Apareça para alunos próximos.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">💪</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Técnicos e Preparadores</h3>
+            <p className="text-gray-600 mt-2">Conduza treinos, avaliações físicas e planejamento esportivo.</p>
+          </motion.div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 pb-16">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Como Funciona
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[
+            { n: '1', title: 'Cadastre-se', desc: 'Crie seu perfil profissional' },
+            { n: '2', title: 'Defina Agenda', desc: 'Configure disponibilidade e preços' },
+            { n: '3', title: 'Aceite Ofertas', desc: 'Receba e aceite oportunidades' },
+            { n: '4', title: 'Receba PIX', desc: 'Pagamento automático após o serviço' },
+          ].map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.08 * i }}
+              className="bg-white rounded-2xl p-8 shadow-lg text-center"
+            >
+              <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-[#004ef9] to-[#ff4b00] text-white flex items-center justify-center font-bold mb-4">
+                {step.n}
+              </div>
+              <h3 className="font-semibold text-[#000273]">{step.title}</h3>
+              <p className="text-gray-600 mt-2 text-sm">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      <div className="bg-[#000273]">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: -16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="font-montserrat italic font-semibold text-3xl md:text-4xl text-white"
+          >
+            Comece a Receber Oportunidades
+          </motion.h2>
+          <p className="text-white/80 mt-2">Mais de 3.400 profissionais já estão conectados. Cadastro gratuito!</p>
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <a href="/cadastro" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff4b00] to-[#ff6b00] text-white font-semibold hover:shadow-lg transition-all">
+              Cadastrar Gratuitamente
+            </a>
+            <a href="/login/profissional" className="px-6 py-3 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition-all">
+              Entrar como Profissional
+            </a>
+          </div>
+        </div>
       </div>
       <Footer />
     </div>
@@ -76,18 +331,49 @@ function Marketplace() {
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
       <div className="container mx-auto px-4 py-16">
-        <h1 className="font-montserrat italic font-semibold text-4xl text-[#000273] mb-6">Marketplace</h1>
-        <p className="text-xl text-gray-600 mb-12">Produtos esportivos de qualidade</p>
+        <motion.div
+          initial={{ opacity: 0, y: -24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-center mb-10"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+            <ShoppingBag className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273]">Marketplace Esportivo</h1>
+          <p className="text-gray-600 mt-2">Produtos e equipamentos para atletas e arenas</p>
+        </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all">
-              <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300" />
-              <div className="p-4">
-                <h3 className="font-semibold text-[#000273] mb-2">Produto {i + 1}</h3>
-                <p className="text-2xl font-bold text-[#ff4b00]">R$ {(Math.random() * 500 + 100).toFixed(2)}</p>
-              </div>
-            </div>
-          ))}
+          {Array.from({ length: 8 }).map((_, i) => {
+            const offsets = [-40, -20, 20, 40];
+            const price = [50, 100, 150, 200][i % 4];
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: offsets[i % offsets.length] }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.06 * i }}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
+              >
+                <div className="p-4">
+                  <div className="h-40 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <ShoppingBag className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <div className="pt-4">
+                    <h3 className="font-semibold text-[#000273]">Produto Esportivo {i + 1}</h3>
+                    <p className="text-gray-600 text-sm mt-1">Descrição do produto esportivo</p>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-[#000273] font-bold">R$ {price}</span>
+                      <button className="px-4 py-2 rounded-lg bg-[#004ef9] text-white text-sm hover:bg-[#0066ff] transition-colors">
+                        Comprar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
       <Footer />
@@ -100,19 +386,48 @@ function Blog() {
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
       <div className="container mx-auto px-4 py-16">
-        <h1 className="font-montserrat italic font-semibold text-4xl text-[#000273] mb-12">Blog</h1>
+        <motion.div
+          initial={{ opacity: 0, y: -24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-center mb-10"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273]">Blog SportConnect</h1>
+          <p className="text-gray-600 mt-2">Dicas, novidades e tendências do mundo esportivo</p>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {['Gestão', 'Atleta', 'Tecnologia'].map((cat, i) => (
-            <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg">
-              <div className="h-48 bg-gradient-to-br from-blue-200 to-blue-400" />
-              <div className="p-6">
-                <span className="inline-block px-3 py-1 rounded-lg bg-[#004ef9]/10 text-[#004ef9] text-sm mb-3">{cat}</span>
-                <h3 className="font-semibold text-xl text-[#000273] mb-2">Título do Artigo {i + 1}</h3>
-                <p className="text-gray-600 mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                <button className="text-[#004ef9] font-semibold hover:underline">Ler mais →</button>
-              </div>
-            </div>
-          ))}
+          {[
+            { cat: 'Gestão', title: 'Como aumentar a ocupação da sua arena em 200%', date: '25 Out 2025' },
+            { cat: 'Atleta', title: '10 dicas para melhorar seu ranking ELO', date: '22 Out 2025' },
+            { cat: 'Tecnologia', title: 'IA e esporte: o futuro já chegou', date: '18 Out 2025' },
+          ].map((post, i) => {
+            const offsets = [-40, 0, 40];
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: offsets[i % offsets.length] }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 * i }}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
+              >
+                <div className="h-40 md:h-44 bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center">
+                    <BookOpen className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div className="p-6">
+                  <span className="inline-block px-3 py-1 rounded-lg bg-[#004ef9]/10 text-[#004ef9] text-sm mb-3">{post.cat}</span>
+                  <h3 className="font-semibold text-xl text-[#000273] mb-2">{post.title}</h3>
+                  <p className="text-gray-500 text-sm mb-4">{post.date}</p>
+                  <button className="text-[#004ef9] font-semibold hover:underline">Ler mais →</button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
       <Footer />
@@ -145,27 +460,85 @@ function Contato() {
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
       <div className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="font-montserrat italic font-semibold text-4xl text-[#000273] mb-6">Contato</h1>
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <form className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                <input type="email" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem</label>
-                <textarea rows={5} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] outline-none" />
-              </div>
-              <button type="submit" className="w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white hover:shadow-xl transition-all">
-                Enviar Mensagem
-              </button>
-            </form>
+        <motion.div
+          initial={{ opacity: 0, y: -24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-center mb-10"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+            <Mail className="w-8 h-8 text-white" />
           </div>
+          <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273]">Fale Conosco</h1>
+          <p className="text-gray-600 mt-2">Estamos aqui para ajudar você</p>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.05 }}
+              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#000273]">E-mail</h3>
+                <p className="text-gray-600">contato@sportconnect.com.br</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
+              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center">
+                <Phone className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#000273]">Telefone</h3>
+                <p className="text-gray-600">(11) 99999-9999</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.25 }}
+              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#000273]">Endereço</h3>
+                <p className="text-gray-600">São Paulo, SP - Brasil</p>
+              </div>
+            </motion.div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h3 className="font-montserrat font-semibold text-xl text-[#000273] mb-6">Envie uma Mensagem</h3>
+              <form className="space-y-4">
+                <input type="text" placeholder="Seu Nome" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
+                <input type="email" placeholder="Seu E-mail" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
+                <input type="text" placeholder="Assunto" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
+                <textarea rows={5} placeholder="Sua Mensagem" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
+                <button type="submit" className="w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-xl transition-all">
+                  Enviar Mensagem
+                </button>
+              </form>
+            </div>
+          </motion.div>
         </div>
       </div>
       <Footer />
@@ -176,11 +549,11 @@ function Contato() {
 // Protected Route Component
 function ProtectedRoute({ children, requiredType }: { children: React.ReactNode; requiredType: string }) {
   const { user } = useAuth();
-  
+
   if (!user || user.type !== requiredType) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -210,14 +583,16 @@ export default function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/parceiros" element={<Parceiros />} />
           <Route path="/contato" element={<Contato />} />
-          
+
           {/* Login Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/login/:type" element={<Login />} />
-          
+          <Route path="/esqueceu-senha" element={<ForgotPassword />} />
+          <Route path="/cadastro" element={<Cadastro />} />
+
           {/* Arena Dashboard */}
-          <Route 
-            path="/dashboard/arena" 
+          <Route
+            path="/dashboard/arena"
             element={
               <ProtectedRoute requiredType="arena">
                 <ArenaDashboard />
@@ -225,33 +600,198 @@ export default function App() {
             }
           >
             <Route index element={<ArenaHome />} />
-            <Route path="reservas" element={<div className="p-8"><h1 className="text-3xl font-bold">Reservas</h1></div>} />
+            <Route
+              path="reservas"
+              element={
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Reservas</h1>
+                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.36, ease: 'easeOut' }}
+                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+                          <Calendar className="w-8 h-8 text-white" />
+                        </div>
+                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
+                          Módulo Reservas
+                        </h2>
+                        <p className="text-gray-600">
+                          Interface do módulo em desenvolvimento
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              }
+            />
             <Route path="disponibilidade" element={<Disponibilidade />} />
-            <Route path="financeiro" element={<div className="p-8"><h1 className="text-3xl font-bold">Financeiro</h1></div>} />
-            <Route path="relatorios" element={<div className="p-8"><h1 className="text-3xl font-bold">Relatórios</h1></div>} />
-            <Route path="clientes" element={<div className="p-8"><h1 className="text-3xl font-bold">Clientes</h1></div>} />
-            <Route path="configuracoes" element={<div className="p-8"><h1 className="text-3xl font-bold">Configurações</h1></div>} />
+            <Route
+              path="financeiro"
+              element={
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Financeiro</h1>
+                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.36, ease: 'easeOut' }}
+                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+                          <DollarSign className="w-8 h-8 text-white" />
+                        </div>
+                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
+                          Módulo Financeiro
+                        </h2>
+                        <p className="text-gray-600">
+                          Interface do módulo em desenvolvimento
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              }
+            />
+            <Route
+              path="relatorios"
+              element={
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Relatórios</h1>
+                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.36, ease: 'easeOut' }}
+                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+                          <FileBarChart className="w-8 h-8 text-white" />
+                        </div>
+                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
+                          Módulo Relatórios
+                        </h2>
+                        <p className="text-gray-600">
+                          Interface do módulo em desenvolvimento
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              }
+            />
+            <Route
+              path="clientes"
+              element={
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Clientes</h1>
+                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.36, ease: 'easeOut' }}
+                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+                          <Users className="w-8 h-8 text-white" />
+                        </div>
+                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
+                          Módulo Clientes
+                        </h2>
+                        <p className="text-gray-600">
+                          Interface do módulo em desenvolvimento
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              }
+            />
+            <Route
+              path="configuracoes"
+              element={
+                <div className="p-8">
+                  <div className="mb-6">
+                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Configurações</h1>
+                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.36, ease: 'easeOut' }}
+                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
+                          <Settings className="w-8 h-8 text-white" />
+                        </div>
+                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
+                          Módulo Configurações
+                        </h2>
+                        <p className="text-gray-600">
+                          Interface do módulo em desenvolvimento
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              }
+            />
           </Route>
 
           {/* Atleta Dashboard */}
-          <Route 
-            path="/dashboard/atleta" 
+          <Route
+            path="/dashboard/atleta"
             element={
               <ProtectedRoute requiredType="atleta">
                 <AtletaDashboard />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<AtletaHome />} />
+            <Route path="explorar" element={<ExplorarArenas />} />
+            <Route path="minhas-reservas" element={<MinhasReservas />} />
+            <Route path="ranking-elo" element={<RankingELO />} />
+            <Route path="grupos" element={<Grupos />} />
+            <Route path="carteira" element={<Carteira />} />
+            <Route path="estatisticas" element={<Estatisticas />} />
+          </Route>
 
           {/* Profissional Dashboard */}
-          <Route 
-            path="/dashboard/profissional" 
+          <Route
+            path="/dashboard/profissional"
             element={
               <ProtectedRoute requiredType="profissional">
                 <ProfissionalDashboard />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<ProfissionalHome />} />
+            <Route path="agenda" element={<Agenda />} />
+            <Route path="oportunidades" element={<Oportunidades />} />
+            <Route path="historico" element={<Historico />} />
+            <Route path="comissoes" element={<Comissoes />} />
+            <Route path="perfil-publico" element={<PerfilPublico />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>

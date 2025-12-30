@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, Activity, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function ArenaDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -73,6 +73,19 @@ export function ArenaDashboard() {
               );
             })}
           </nav>
+          
+          {/* Logout */}
+          <div className="p-4 border-t border-white/10">
+            <button
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10 focus:ring-2 focus:ring-white/20 outline-none"
+              aria-label="Sair"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5" />
+              {sidebarOpen && <span>Sair</span>}
+            </button>
+          </div>
         </div>
       </aside>
 
