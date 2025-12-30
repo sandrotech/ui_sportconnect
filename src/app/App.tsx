@@ -57,23 +57,246 @@ function Atletas() {
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
+      <div className="relative">
+        <div className="h-[320px] md:h-[420px] relative">
+          <img
+            src="https://s2-ge.glbimg.com/z9lq_r2UBLkjnbmPhIpPzmFxN6E=/0x0:2121x1414/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2025/A/H/bANVJbSGujsDEgN7Yh1g/istock-468947496.jpg"
+            alt="Atletas em vôlei, beach tennis e futevôlei"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#000273]/80 to-[#000273]/60" />
+          <div className="relative z-10 container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: -24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="font-montserrat italic font-semibold text-4xl md:text-5xl text-white"
+            >
+              Para Atletas <span className="text-[#ff4b00]">de Todos os Níveis</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+              className="text-white/80 mt-3"
+            >
+              Encontre arenas, marque jogos, evolua seu ranking e faça parte de grupos.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+              className="mt-6 flex items-center gap-4"
+            >
+              <a
+                href="/cadastro"
+                className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff4b00] to-[#ff6b00] text-white font-semibold hover:shadow-lg transition-all"
+              >
+                Criar Conta Gratuita
+              </a>
+              <a
+                href="/login/atleta"
+                className="inline-block px-6 py-3 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition-all"
+              >
+                Entrar como Atleta
+              </a>
+            </motion.div>
+          </div>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-16">
-        <h1 className="font-montserrat italic font-semibold text-4xl text-[#000273] mb-6">Para Atletas</h1>
-        <p className="text-xl text-gray-600 mb-12">Encontre quadras, acompanhe seu ranking e evolua no esporte</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {['Reservas Rápidas', 'Ranking ELO', 'Grupos', 'Carteira Digital'].map((feature, i) => (
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Benefícios para Atletas
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Reservas Rápidas</h3>
+            <p className="text-gray-600 mt-2">Agende partidas em poucas etapas e receba confirmações instantâneas</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-4">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Ranking ELO</h3>
+            <p className="text-gray-600 mt-2">Evolua no ELO com resultados das suas partidas</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center mb-4">
+              <MapPin className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Explorar Arenas</h3>
+            <p className="text-gray-600 mt-2">Encontre quadras próximas com filtros por modalidade e horários</p>
+          </motion.div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.3 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center mb-4">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Grupos e Times</h3>
+            <p className="text-gray-600 mt-2">Crie ou participe de grupos para organizar partidas e treinos</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.4 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center mb-4">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Carteira Digital</h3>
+            <p className="text-gray-600 mt-2">Pague reservas e receba prêmios com segurança</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.5 }}
+            className="bg-white rounded-2xl p-8 shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-4">
+              <FileBarChart className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-lg text-[#000273]">Estatísticas</h3>
+            <p className="text-gray-600 mt-2">Acompanhe histórico de partidas e métricas de desempenho</p>
+          </motion.div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 pb-16">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Para Todos os Atletas
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">🟢</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Iniciantes</h3>
+            <p className="text-gray-600 mt-2">Comece jogando partidas amistosas e evolua aos poucos</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">🟡</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Intermediários</h3>
+            <p className="text-gray-600 mt-2">Participe de jogos competitivos e suba seu ELO com consistência</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+            className="bg-white rounded-2xl p-8 shadow-lg text-center"
+          >
+            <div className="text-4xl mb-3">🔵</div>
+            <h3 className="font-semibold text-lg text-[#000273]">Avançados</h3>
+            <p className="text-gray-600 mt-2">Dispute partidas de alto nível e refine suas métricas</p>
+          </motion.div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 pb-16">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="font-montserrat italic font-semibold text-3xl md:text-4xl text-[#000273] text-center mb-10"
+        >
+          Como Funciona
+        </motion.h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[
+            { n: '1', title: 'Cadastre-se', desc: 'Crie seu perfil de atleta' },
+            { n: '2', title: 'Explore Arenas', desc: 'Encontre quadras e horários ideais' },
+            { n: '3', title: 'Reserve e Jogue', desc: 'Marque partidas e confirme presença' },
+            { n: '4', title: 'Evolua no ELO', desc: 'Acompanhe estatísticas e conquistas' },
+          ].map((step, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut', delay: i * 0.08 }}
-              className="bg-white rounded-2xl p-6 shadow-lg"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.08 * i }}
+              className="bg-white rounded-2xl p-8 shadow-lg text-center"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] mb-4" />
-              <h3 className="font-semibold text-lg text-[#000273] mb-2">{feature}</h3>
-              <p className="text-gray-600 text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+              <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-[#004ef9] to-[#ff4b00] text-white flex items-center justify-center font-bold mb-4">
+                {step.n}
+              </div>
+              <h3 className="font-semibold text-[#000273]">{step.title}</h3>
+              <p className="text-gray-600 mt-2 text-sm">{step.desc}</p>
             </motion.div>
           ))}
+        </div>
+      </div>
+      <div className="bg-[#000273]">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: -16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="font-montserrat italic font-semibold text-3xl md:text-4xl text-white"
+          >
+            Comece a Jogar e Evoluir
+          </motion.h2>
+          <p className="text-white/80 mt-2">Milhares de atletas já estão conectados. Cadastro gratuito!</p>
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <a href="/cadastro" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff4b00] to-[#ff6b00] text-white font-semibold hover:shadow-lg transition-all">
+              Criar Conta Gratuita
+            </a>
+            <a href="/login/atleta" className="px-6 py-3 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition-all">
+              Entrar como Atleta
+            </a>
+          </div>
         </div>
       </div>
       <Footer />
