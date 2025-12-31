@@ -1,9 +1,11 @@
 import { Trophy, Calendar, Wallet, LineChart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '../../../components/ui/use-mobile';
 
 export function AtletaHome() {
+  const isMobile = useIsMobile();
   const kpis = [
-    { icon: Trophy, value: '2156', label: 'ELO Rating', color: 'from-orange-500 to-orange-600' },
+    { icon: Trophy, value: '2156', label: 'Ranking ELO', color: 'from-orange-500 to-orange-600' },
     { icon: Calendar, value: '12', label: 'Partidas Este Mês', color: 'from-blue-500 to-blue-600' },
     { icon: LineChart, value: '68%', label: 'Taxa de Vitórias', color: 'from-green-500 to-green-600' },
     { icon: Wallet, value: 'R$ 250', label: 'Saldo', color: 'from-purple-500 to-purple-600' },
@@ -33,13 +35,22 @@ export function AtletaHome() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.36, ease: 'easeOut' }}
-      className="px-8 py-8"
+      className="px-4 md:px-8 py-4 md:py-8 pb-24"
     >
       <div className="mb-6">
-        <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Início</h1>
-        <p className="text-gray-600">Bem-vindo de volta!</p>
+        {isMobile ? (
+          <div>
+            <h1 className="font-montserrat font-semibold text-xl text-[#000273]">Início</h1>
+            <p className="text-gray-600 text-xs">Resumo da sua jornada</p>
+          </div>
+        ) : (
+          <>
+            <h1 className="font-montserrat font-bold text-3xl text-[#000273] mb-1">Início</h1>
+            <p className="text-gray-600">Bem-vindo de volta!</p>
+          </>
+        )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {kpis.map((kpi, index) => (
           <motion.div
             key={index}
@@ -74,7 +85,7 @@ export function AtletaHome() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: 'easeOut', delay: i * 0.06 }}
-              className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm ring-1 ring-black/5"
+              className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm ring-1 ring-black/5 active:scale-[0.98] transition"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#004ef9] to-[#ff4b00]"></div>

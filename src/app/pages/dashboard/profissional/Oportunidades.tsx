@@ -13,7 +13,7 @@ export function Oportunidades() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.36, ease: 'easeOut' }}
-      className="px-8 py-8"
+      className="px-4 md:px-8 py-6 md:py-8"
     >
       <div className="mb-6">
         <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Oportunidades</h1>
@@ -33,9 +33,9 @@ export function Oportunidades() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, ease: 'easeOut', delay: i * 0.06 }}
-              className="flex items-center justify-between py-4"
+              className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 py-4"
             >
-              <div className="space-y-1">
+              <div className="space-y-1 w-full md:w-auto">
                 <p className="font-semibold text-[#000273]">{item.title}</p>
                 <p className="text-gray-600 text-sm">{item.sport}</p>
                 <div className="flex items-center gap-4 text-sm">
@@ -49,16 +49,16 @@ export function Oportunidades() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
+              <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-3 md:gap-6 mt-3 md:mt-0 flex-wrap">
+                <div className="text-left md:text-right">
                   <p className="font-semibold text-[#000273]">R$ {item.price}</p>
                   <p className="text-gray-500 text-xs">por serviço</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-all">
+                  <button className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-all whitespace-nowrap">
                     Recusar
                   </button>
-                  <button className="px-4 py-2 rounded-lg bg-[#004ef9] text-white hover:brightness-110 transition-all">
+                  <button className="px-4 py-2 rounded-lg bg-[#004ef9] text-white hover:brightness-110 transition-all whitespace-nowrap">
                     Aceitar
                   </button>
                 </div>

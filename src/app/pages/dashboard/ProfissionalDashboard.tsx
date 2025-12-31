@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Calendar, DollarSign, Star, LogOut, LayoutDashboard, CalendarDays, Briefcase, Clock, Wallet, Globe, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../components/ui/use-mobile';
+import { BottomNav } from '../../components/BottomNav';
 
 export function ProfissionalDashboard() {
   const { user, logout } = useAuth();
@@ -14,11 +15,13 @@ export function ProfissionalDashboard() {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
 
-  const menuItems = [
+  const principal = [
     { icon: LayoutDashboard, label: 'Início', path: '/dashboard/profissional' },
     { icon: CalendarDays, label: 'Agenda', path: '/dashboard/profissional/agenda' },
     { icon: Briefcase, label: 'Oportunidades', path: '/dashboard/profissional/oportunidades' },
     { icon: Clock, label: 'Histórico', path: '/dashboard/profissional/historico' },
+  ];
+  const conta = [
     { icon: DollarSign, label: 'Comissões', path: '/dashboard/profissional/comissoes' },
     { icon: Globe, label: 'Perfil Público', path: '/dashboard/profissional/perfil-publico' },
   ];
@@ -43,7 +46,7 @@ export function ProfissionalDashboard() {
         aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
         title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
         onClick={() => setSidebarOpen((v) => !v)}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+        className={`fixed top-4 left-4 z-50 h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors ${isMobile ? 'hidden' : 'flex'}`}
       >
         {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -58,9 +61,8 @@ export function ProfissionalDashboard() {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-[#000273] to-[#001a4d] text-white overflow-hidden transition-all duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } ${sidebarOpen ? 'md:w-64' : 'md:w-0'} w-64`}
+        className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-[#000273] to-[#001a4d] text-white overflow-hidden transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          } ${sidebarOpen ? 'md:w-64' : 'md:w-0'} w-[85vw]`}
       >
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-white/10">
@@ -76,44 +78,66 @@ export function ProfissionalDashboard() {
               )}
             </div>
           </div>
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {menuItems.map((item, i) => {
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto pb-24 md:pb-4 no-scrollbar">
+            {isMobile && <div className="px-2 py-1 text-xs uppercase text-white/60">Principal</div>}
+            {principal.map((item, i) => {
               const isActive = item.path && location.pathname === item.path;
               const commonClasses = `flex items-center gap-3 px-4 py-3 rounded-xl transition-all`;
-              if (item.path) {
-                return (
-                  <Link
-                    key={i}
-                    to={item.path}
-                    className={`${commonClasses} ${isActive ? 'bg-gradient-to-r from-[#ff6b00] to-[#ff4b00] shadow-lg' : 'hover:bg-white/10'}`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {sidebarOpen && <span>{item.label}</span>}
-                  </Link>
-                );
-              }
               return (
-                <button key={i} className={`${commonClasses} hover:bg-white/10`} type="button">
+                <Link
+                  key={`principal-${i}`}
+                  to={item.path!}
+                  className={`${commonClasses} ${isActive ? 'bg-gradient-to-r from-[#ff6b00] to-[#ff4b00] shadow-lg' : 'hover:bg-white/10'}`}
+                >
                   <item.icon className="w-5 h-5" />
                   {sidebarOpen && <span>{item.label}</span>}
-                </button>
+                </Link>
               );
             })}
-          </nav>
-          <div className="p-4 border-t border-white/10">
+            {isMobile && <div className="px-2 pt-3 pb-1 text-xs uppercase text-white/60">Conta</div>}
+            {conta.map((item, i) => {
+              const isActive = item.path && location.pathname === item.path;
+              const commonClasses = `flex items-center gap-3 px-4 py-3 rounded-xl transition-all`;
+              return (
+                <Link
+                  key={`conta-${i}`}
+                  to={item.path!}
+                  className={`${commonClasses} ${isActive ? 'bg-gradient-to-r from-[#ff6b00] to-[#ff4b00] shadow-lg' : 'hover:bg-white/10'}`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {sidebarOpen && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
             <button
+              type="button"
               onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10 focus:ring-2 focus:ring-white/20 outline-none"
+              aria-label="Sair"
+              title="Sair"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/10 focus:ring-2 focus:ring-white/20 outline-none w-full"
             >
               <LogOut className="w-5 h-5" />
               {sidebarOpen && <span>Sair</span>}
             </button>
-          </div>
+          </nav>
         </div>
       </aside>
       <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
         <Outlet />
       </div>
+
+      {/* Bottom Navigation (Mobile) */}
+      {isMobile && (
+        <BottomNav
+          items={[
+            { icon: LayoutDashboard, label: 'Início', path: '/dashboard/profissional' },
+            { icon: CalendarDays, label: 'Agenda', path: '/dashboard/profissional/agenda' },
+            { icon: Briefcase, label: 'Oport.', path: '/dashboard/profissional/oportunidades' },
+            { icon: DollarSign, label: 'Comissões', path: '/dashboard/profissional/comissoes' },
+            { icon: Menu, label: 'Mais', onClick: () => setSidebarOpen((v) => !v) },
+          ]}
+        />
+      )}
     </div>
   );
 }
