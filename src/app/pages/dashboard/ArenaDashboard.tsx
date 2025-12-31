@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, Activity, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, Activity, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useIsMobile } from '../../components/ui/use-mobile';
 
 export function ArenaDashboard() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard/arena' },
@@ -20,8 +26,32 @@ export function ArenaDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
+      {/* Toggle Button */}
+      <button
+        type="button"
+        aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+        title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+        onClick={() => setSidebarOpen((v) => !v)}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors"
+      >
+        {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px]"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-[#000273] to-[#001a4d] text-white transition-all ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside
+        className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-[#000273] to-[#001a4d] text-white overflow-hidden transition-all duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } ${sidebarOpen ? 'md:w-64' : 'md:w-0'} w-64`}
+      >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
@@ -90,7 +120,7 @@ export function ArenaDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className={`transition-all ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
         <Outlet />
       </div>
     </div>
