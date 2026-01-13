@@ -1,84 +1,245 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Activity, LogOut, Menu, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useMemo, useState } from "react";
+import { LayoutGroup, motion } from "framer-motion";
 
-export default function Header() {
-    const [menuOpen, setMenuOpen] = useState(false);
+type NavItem = { label: string; href: string };
 
-    return (
-        <header className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] z-50 transition-all">
-            <div className="max-w-7xl mx-auto flex items-center justify-between h-[72px] px-6 md:px-10">
-                <Link href="/" className="flex items-center">
-                    <Image
-                        src="/logo4_sportconnect.png"
-                        alt="SportConnect"
-                        width={210}
-                        height={90}
-                        className="object-contain drop-shadow-md hover:scale-[1.03] transition-transform"
-                        priority
-                    />
+export function Header() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems: NavItem[] = useMemo(
+    () => [
+      { label: "Arenas", href: "/arenas" },
+      { label: "Atletas", href: "/atletas" },
+      { label: "Profissionais", href: "/profissionais" },
+      { label: "Marketplace", href: "/marketplace" },
+      { label: "Blog", href: "/blog" },
+      { label: "Contato", href: "/contato" },
+    ],
+    []
+  );
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href);
+  };
+
+  // Fecha o menu mobile ao trocar de rota
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // ESC fecha o menu
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen]);
+
+  // Trava scroll do body quando menu mobile aberto (melhor usabilidade)
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
+  const navLinkClasses = (active: boolean) =>
+    [
+      "relative inline-flex items-center",
+      "rounded-lg px-2 py-1",
+      "text-sm font-medium",
+      "transition-all duration-300 motion-reduce:transition-none",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4b00]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#000273]",
+      active ? "text-white" : "text-white/75 hover:text-white",
+      active
+        ? "before:content-[''] before:absolute before:inset-0 before:-z-10 before:rounded-lg before:bg-white/10 before:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_0_18px_rgba(255,75,0,0.12)]"
+        : "",
+    ].join(" ");
+
+  return (
+    <header className="sticky top-0 z-50 bg-[#000273]/90 backdrop-blur-md border-b border-white/10">
+      {/* Acessibilidade: pular para conteúdo */}
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-[#000273]"
+      >
+        Pular para o conteúdo
+      </a>
+
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center shadow-lg shadow-[#ff4b00]/20 group-hover:shadow-[#ff4b00]/40 transition-all duration-300 group-hover:scale-105 motion-reduce:transition-none">
+              <Activity className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="font-montserrat italic font-semibold text-xl text-white">SportConnect</h1>
+              <p className="text-xs text-white/60">Conecte. Jogue. Evolua.</p>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          {!user && (
+            <LayoutGroup>
+              <nav className="hidden md:flex items-center gap-6">
+                {navItems.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={navLinkClasses(active)}
+                    >
+                      <span className="relative z-10">{item.label}</span>
+
+                      {/* Indicador ativo animado (minimalista e “premium”) */}
+                      <span className="absolute left-2 right-2 -bottom-1 h-[2px] rounded-full overflow-hidden">
+                        {active ? (
+                          <motion.span
+                            layoutId="nav-underline"
+                            className="absolute inset-0 bg-gradient-to-r from-[#004ef9] to-[#ff4b00]"
+                            transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                          />
+                        ) : (
+                          <span className="absolute inset-0 bg-gradient-to-r from-[#004ef9] to-[#ff4b00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        )}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </LayoutGroup>
+          )}
+
+          {/* User / Actions */}
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="hidden md:block text-white/80 text-sm">Olá, {user.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all duration-300 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden md:inline">Sair</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-lg hover:shadow-[#ff4b00]/30 transition-all duration-300 hover:scale-[1.03] motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4b00]/60"
+                >
+                  Entrar
                 </Link>
 
-                {/* Menu Desktop */}
-                <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#2B2E33] font-medium">
-                    <a href="#solucoes" className="hover:text-[#0098E8] transition">Soluções</a>
-                    <a href="#sobre" className="hover:text-[#0098E8] transition">Sobre</a>
-                    <a href="#contato" className="hover:text-[#0098E8] transition">Contato</a>
-                </nav>
-
-                {/* Botões */}
-                <div className="hidden md:flex items-center gap-3">
-                    <Link
-                        href="/login"
-                        className="bg-[#0098E8] hover:bg-[#005D9C] text-white text-sm px-4 py-[6px] rounded-md shadow-sm transition-all"
-                    >
-                        Entrar
-                    </Link>
-                    <Link
-                        href="/arena/login"
-                        className="bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#2B2E33] text-sm px-4 py-[6px] rounded-md shadow-sm transition-all"
-                    >
-                        Entrar como Arena
-                    </Link>
-                </div>
-
-                {/* Mobile */}
+                {/* Mobile Menu Button */}
                 <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="md:hidden text-[#0098E8] focus:outline-none"
-                    aria-label="Abrir menu"
+                  type="button"
+                  aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="mobile-nav"
+                  onClick={() => setMobileMenuOpen((v) => !v)}
+                  className="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
-                    {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                  {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
-            </div>
-
-            {menuOpen && (
-                <div className="bg-white border-t border-gray-100 md:hidden shadow-md">
-                    <nav className="flex flex-col items-center gap-4 py-5 text-[#2B2E33] font-medium">
-                        <a href="#solucoes" onClick={() => setMenuOpen(false)}>Soluções</a>
-                        <a href="#sobre" onClick={() => setMenuOpen(false)}>Sobre</a>
-                        <a href="#contato" onClick={() => setMenuOpen(false)}>Contato</a>
-
-                        <div className="flex flex-col gap-3 mt-3 w-[80%]">
-                            <Link
-                                href="/login"
-                                className="w-full bg-[#0098E8] hover:bg-[#005D9C] text-white text-center py-2 rounded-md text-sm"
-                            >
-                                Entrar
-                            </Link>
-                            <Link
-                                href="/arena/login"
-                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-center py-2 rounded-md text-sm"
-                            >
-                                Entrar como Arena
-                            </Link>
-                        </div>
-                    </nav>
-                </div>
+              </>
             )}
-        </header>
-    );
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu (Overlay + Panel) */}
+      {!user && (
+        <>
+          {/* Overlay */}
+          <div
+            className={[
+              "md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300",
+              mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+            ].join(" ")}
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Panel */}
+          <div
+            id="mobile-nav"
+            className={[
+              "md:hidden fixed z-50 left-0 right-0 top-20",
+              "origin-top border-t border-white/10 bg-[#000273]/95 backdrop-blur-md",
+              "transition-all duration-300 motion-reduce:transition-none",
+              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none",
+            ].join(" ")}
+          >
+            <nav className="container mx-auto px-4 py-4 space-y-1">
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={[
+                      "flex items-center justify-between",
+                      "px-3 py-3 rounded-lg",
+                      "transition-colors duration-300 motion-reduce:transition-none",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4b00]/60",
+                      active ? "text-white bg-white/10" : "text-white/80 hover:text-white hover:bg-white/5",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Barra ativa lateral (melhora MUITO a clareza no mobile) */}
+                      <span
+                        className={[
+                          "w-1 h-6 rounded-full",
+                          active ? "bg-gradient-to-b from-[#004ef9] to-[#ff4b00]" : "bg-transparent",
+                        ].join(" ")}
+                        aria-hidden="true"
+                      />
+                      <span className={active ? "font-semibold" : ""}>{item.label}</span>
+                    </div>
+
+                    {/* Mini “dot” de status (discreto) */}
+                    {active && (
+                      <span
+                        className="w-2 h-2 rounded-full bg-[#ff4b00] shadow-[0_0_12px_rgba(255,75,0,0.55)]"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </>
+      )}
+    </header>
+  );
 }
