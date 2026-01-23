@@ -12,14 +12,24 @@ export function Login() {
   const [selectedType, setSelectedType] = useState<UserType | null>(type || null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedType) {
-      login(email, password, selectedType);
-      navigate(`/dashboard/${selectedType}`);
+      setError('');
+      setLoading(true);
+      try {
+        await login(email, password, selectedType);
+        navigate(`/dashboard/${selectedType}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Falha ao autenticar');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -227,11 +237,18 @@ export function Login() {
               </Link>
             </div>
 
+            {error ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
+
             <button
               type="submit"
-              className={`w-full py-4 rounded-xl bg-gradient-to-r ${config.color} text-white font-semibold hover:shadow-xl transition-all hover:scale-[1.02]`}
+              disabled={loading}
+              className={`w-full py-4 rounded-xl bg-gradient-to-r ${config.color} text-white font-semibold hover:shadow-xl transition-all hover:scale-[1.02] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Entrar
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
 
             <div className="text-center text-sm text-gray-600">

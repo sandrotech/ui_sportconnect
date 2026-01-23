@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Users, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 type UserType = 'arena' | 'atleta' | 'profissional';
 
@@ -11,12 +12,39 @@ export function Cadastro() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [type, setType] = useState<UserType>('atleta');
+  const [apelido, setApelido] = useState('');
+  const [nomeArena, setNomeArena] = useState('');
+  const [cnpj, setCnpj] = useState('');
+  const [especialidade, setEspecialidade] = useState('');
+  const [valorHora, setValorHora] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) return;
-    navigate(`/login/${type}`);
+    if (password !== confirm) {
+      setError('As senhas não conferem');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+    try {
+      if (type === 'arena') {
+        await register({ type, name, email, password, nomeArena, cnpj });
+      } else if (type === 'atleta') {
+        await register({ type, name, email, password, apelido });
+      } else {
+        await register({ type, name, email, password, especialidade, valorHora: Number(valorHora) });
+      }
+      navigate(`/dashboard/${type}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao cadastrar');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,11 +154,88 @@ export function Cadastro() {
               </div>
             </div>
 
+            {type === 'arena' ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nome da arena</label>
+                  <input
+                    type="text"
+                    value={nomeArena}
+                    onChange={(e) => setNomeArena(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="Arena Central"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
+                  <input
+                    type="text"
+                    value={cnpj}
+                    onChange={(e) => setCnpj(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="00.000.000/0001-00"
+                    required
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {type === 'atleta' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Apelido</label>
+                <input
+                  type="text"
+                  value={apelido}
+                  onChange={(e) => setApelido(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                  placeholder="Seu apelido"
+                  required
+                />
+              </div>
+            ) : null}
+
+            {type === 'profissional' ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Especialidade</label>
+                  <input
+                    type="text"
+                    value={especialidade}
+                    onChange={(e) => setEspecialidade(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="Treinador, árbitro, fisioterapeuta..."
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Valor por hora</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={valorHora}
+                    onChange={(e) => setValorHora(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="150"
+                    required
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {error ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
+
             <button
               type="submit"
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white font-semibold hover:shadow-xl transition-all hover:scale-[1.02]"
+              disabled={loading}
+              className={`w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white font-semibold hover:shadow-xl transition-all hover:scale-[1.02] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Criar conta
+              {loading ? 'Criando conta...' : 'Criar conta'}
             </button>
 
             <p className="text-center text-sm text-gray-600">
