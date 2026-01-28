@@ -3,8 +3,28 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Users, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 
 type UserType = 'arena' | 'atleta' | 'profissional';
+
+const ESPECIALIDADES = [
+  'Treinador',
+  'Árbitro',
+  'Fisioterapeuta',
+  'Massagista',
+  'Personal Trainer',
+  'Preparador Físico',
+  'Nutricionista',
+  'Psicólogo Esportivo',
+  'Médico do Esporte',
+  'Outro'
+];
 
 export function Cadastro() {
   const [name, setName] = useState('');
@@ -199,14 +219,18 @@ export function Cadastro() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Especialidade</label>
-                  <input
-                    type="text"
-                    value={especialidade}
-                    onChange={(e) => setEspecialidade(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                    placeholder="Treinador, árbitro, fisioterapeuta..."
-                    required
-                  />
+                  <Select value={especialidade} onValueChange={setEspecialidade}>
+                    <SelectTrigger className="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-left shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004ef9] focus:border-transparent data-[placeholder]:text-gray-400">
+                      <SelectValue placeholder="Selecione uma especialidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ESPECIALIDADES.map((esp) => (
+                        <SelectItem key={esp} value={esp}>
+                          {esp}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Valor por hora</label>
