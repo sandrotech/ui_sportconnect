@@ -1,6 +1,6 @@
 "use client";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Activity, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useMemo, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
@@ -90,9 +90,11 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center shadow-lg shadow-[#ff4b00]/20 group-hover:shadow-[#ff4b00]/40 transition-all duration-300 group-hover:scale-105 motion-reduce:transition-none">
-              <Activity className="w-7 h-7 text-white" />
-            </div>
+            <img
+              src="/logo_simbolo.png"
+              alt="SportConnect"
+              className="w-12 h-12 object-contain transition-all duration-300 group-hover:scale-105"
+            />
             <div>
               <h1 className="font-montserrat italic font-semibold text-xl text-white">SportConnect</h1>
               <p className="text-xs text-white/60">Conecte. Jogue. Evolua.</p>
@@ -137,7 +139,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <span className="hidden md:block text-white/80 text-sm">Olá, {user.name}</span>
+                {/* <span className="hidden md:block text-white/80 text-sm">Olá, {user.name}</span> */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all duration-300 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"

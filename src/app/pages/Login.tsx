@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Building2, Users, Trophy, Activity, ArrowLeft } from 'lucide-react';
+import { Building2, Users, Trophy, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { Logo } from '../components/ui/Logo';
 
 type UserType = 'arena' | 'atleta' | 'profissional';
 
@@ -12,10 +13,29 @@ export function Login() {
   const [selectedType, setSelectedType] = useState<UserType | null>(type || null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedRememberMe = localStorage.getItem('sportconnect_remember_me') === 'true';
+    if (savedRememberMe) {
+      const savedEmail = localStorage.getItem('sportconnect_remember_email');
+      const savedPassword = localStorage.getItem('sportconnect_remember_password');
+      
+      if (savedEmail) setEmail(savedEmail);
+      if (savedPassword) {
+        try {
+          setPassword(atob(savedPassword));
+        } catch (e) {
+          console.error('Erro ao decodificar senha salva', e);
+        }
+      }
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +43,18 @@ export function Login() {
       setError('');
       setLoading(true);
       try {
-        await login(email, password, selectedType);
+        await login(email, password, selectedType, rememberMe);
+        
+        if (rememberMe) {
+          localStorage.setItem('sportconnect_remember_me', 'true');
+          localStorage.setItem('sportconnect_remember_email', email);
+          localStorage.setItem('sportconnect_remember_password', btoa(password));
+        } else {
+          localStorage.removeItem('sportconnect_remember_me');
+          localStorage.removeItem('sportconnect_remember_email');
+          localStorage.removeItem('sportconnect_remember_password');
+        }
+
         navigate(`/dashboard/${selectedType}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao autenticar');
@@ -40,21 +71,19 @@ export function Login() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
+            className="text-center mb-12 relative z-10"
           >
-            <Link to="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors">
+            <Link to="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors relative z-20">
               <ArrowLeft className="w-5 h-5" />
               Voltar para Home
             </Link>
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center shadow-2xl shadow-[#ff4b00]/30">
-                <Activity className="w-12 h-12 text-white" />
-              </div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -z-10 flex justify-center pointer-events-none">
+              <Logo className="h-[500px] w-auto opacity-20" />
             </div>
-            <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-white mb-4">
+            <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-white mb-4 mt-32 relative z-20">
               Bem-vindo ao SportConnect
             </h1>
-            <p className="text-xl text-white/70">Selecione seu tipo de acesso</p>
+            <p className="text-xl text-white/70 relative z-20">Selecione seu tipo de acesso</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -130,24 +159,21 @@ export function Login() {
     arena: {
       title: 'Login Arena',
       color: 'from-[#004ef9] to-[#0066ff]',
-      icon: Building2,
       bg: 'https://images.unsplash.com/photo-1607667730466-3fe37a1842ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBhcmVuYSUyMGluZG9vcnxlbnwxfHx8fDE3NjY4NTI5MTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
     atleta: {
       title: 'Login Atleta',
       color: 'from-[#ff4b00] to-[#ff6b00]',
-      icon: Users,
       bg: 'https://images.unsplash.com/photo-1746003624976-64d50dd8a63a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdGhsZXRlcyUyMHBsYXlpbmclMjBzcG9ydHN8ZW58MXx8fHwxNzY2ODUyOTE5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
     profissional: {
       title: 'Login Profissional',
       color: 'from-purple-500 to-purple-600',
-      icon: Trophy,
       bg: 'https://images.unsplash.com/photo-1659411587993-4aa949993f25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWFjaCUyMHRlbm5pcyUyMGNvdXJ0fGVufDF8fHx8MTc2Njg1MjkxOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     },
   }[selectedType];
 
-  const Icon = config.icon;
+
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 relative">
@@ -161,15 +187,11 @@ export function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/80 to-[#000273]/40" />
         <div className="relative z-10 h-full flex items-center justify-center p-12">
           <div className="text-center">
-            <div className={`w-32 h-32 mx-auto mb-8 rounded-3xl bg-gradient-to-br ${config.color} flex items-center justify-center shadow-2xl`}>
-              <Icon className="w-16 h-16 text-white" />
-            </div>
-            <h1 className="font-montserrat italic font-semibold text-5xl text-white mb-4">
-              SportConnect
-            </h1>
-            <p className="text-xl text-white/70">
-              Conecte. Jogue. Evolua.
-            </p>
+            <Logo 
+              className="h-48 md:h-64 w-auto mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]" 
+              imageClassName="scale-110"
+              showText 
+            />
           </div>
         </div>
       </div>
@@ -181,6 +203,10 @@ export function Login() {
           animate={{ opacity: 1, x: 0 }}
           className="w-full max-w-md rounded-3xl bg-white/50 backdrop-blur-md shadow-xl border border-white/30 p-8"
         >
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo className="h-16 w-auto" />
+          </div>
+
           <button
             onClick={() => setSelectedType(null)}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
@@ -227,12 +253,17 @@ export function Login() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]" />
+            <div className="flex items-center justify-between mb-8">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
+                />
                 <span className="ml-2 text-sm text-gray-600">Lembrar-me</span>
               </label>
-              <Link to="/esqueceu-senha" className="text-sm text-[#004ef9] hover:text-[#0066ff]">
+              <Link to="/esqueceu-senha" className="text-sm font-medium text-[#004ef9] hover:text-[#003bbd]">
                 Esqueceu a senha?
               </Link>
             </div>

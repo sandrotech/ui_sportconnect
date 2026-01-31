@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Activity, Facebook, Instagram, Twitter, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Logo } from './ui/Logo';
 
 export function Footer() {
   return (
@@ -9,9 +10,7 @@ export function Footer() {
           {/* Logo e Descrição */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center">
-                <Activity className="w-7 h-7 text-white" />
-              </div>
+              <Logo variant="symbol" className="w-12 h-12" />
               <h2 className="font-montserrat italic font-semibold text-xl">SportConnect</h2>
             </div>
             <p className="text-white/60 mb-6">

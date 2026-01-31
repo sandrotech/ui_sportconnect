@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, Activity, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../components/ui/use-mobile';
 import { BottomNav } from '../../components/BottomNav';
+import { Logo } from '../../components/ui/Logo';
 
 export function ArenaDashboard() {
   const { user, logout } = useAuth();
@@ -58,9 +59,7 @@ export function ArenaDashboard() {
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center">
-                <Activity className="w-6 h-6" />
-              </div>
+              <Logo variant="symbol" className="w-10 h-10" />
               {sidebarOpen && (
                 <div>
                   <h2 className="font-montserrat italic font-semibold">SportConnect</h2>
@@ -111,6 +110,7 @@ export function ArenaDashboard() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => isMobile && setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
                     ? 'bg-gradient-to-r from-[#004ef9] to-[#0066ff] shadow-lg'
                     : 'hover:bg-white/10'

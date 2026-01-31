@@ -4,6 +4,7 @@ import { Calendar, DollarSign, Star, LogOut, LayoutDashboard, CalendarDays, Brie
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../components/ui/use-mobile';
 import { BottomNav } from '../../components/BottomNav';
+import { Logo } from '../../components/ui/Logo';
 
 export function ProfissionalDashboard() {
   const { user, logout } = useAuth();
@@ -67,9 +68,7 @@ export function ProfissionalDashboard() {
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center">
-                <span className="font-semibold">SC</span>
-              </div>
+              <Logo variant="symbol" className="w-10 h-10" />
               {sidebarOpen && (
                 <div>
                   <h2 className="font-montserrat italic font-semibold">Profissional</h2>
@@ -102,6 +101,7 @@ export function ProfissionalDashboard() {
                 <Link
                   key={`conta-${i}`}
                   to={item.path!}
+                  onClick={() => isMobile && setSidebarOpen(false)}
                   className={`${commonClasses} ${isActive ? 'bg-gradient-to-r from-[#ff6b00] to-[#ff4b00] shadow-lg' : 'hover:bg-white/10'}`}
                 >
                   <item.icon className="w-5 h-5" />

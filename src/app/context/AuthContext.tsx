@@ -18,9 +18,11 @@ type RegisterData =
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string, type: UserType) => Promise<void>;
+  login: (email: string, password: string, type: UserType, remember?: boolean) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  forgotPassword: (email: string) => Promise<{ message: string; token?: string }>;
+  resetPassword: (token: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('sportconnect:user');
-    const storedToken = localStorage.getItem('sportconnect:token');
+    const storedUser = localStorage.getItem('sportconnect:user') || sessionStorage.getItem('sportconnect:user');
+    const storedToken = localStorage.getItem('sportconnect:token') || sessionStorage.getItem('sportconnect:token');
     if (storedUser && storedToken) {
       try {
         setUser(JSON.parse(storedUser) as User);
@@ -40,11 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         localStorage.removeItem('sportconnect:user');
         localStorage.removeItem('sportconnect:token');
+        sessionStorage.removeItem('sportconnect:user');
+        sessionStorage.removeItem('sportconnect:token');
       }
     }
   }, []);
 
-  const login = async (email: string, password: string, type: UserType) => {
+  const login = async (email: string, password: string, type: UserType, remember: boolean = false) => {
     const response = await fetch(`${apiBase}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,8 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(nextUser);
     setToken(data.token);
-    localStorage.setItem('sportconnect:user', JSON.stringify(nextUser));
-    localStorage.setItem('sportconnect:token', data.token);
+
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('sportconnect:user', JSON.stringify(nextUser));
+    storage.setItem('sportconnect:token', data.token);
   };
 
   const register = async (data: RegisterData) => {
@@ -85,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!response.ok) {
       throw new Error(payload?.error || 'Falha ao cadastrar');
     }
-    await login(data.email, data.password, data.type);
+    await login(data.email, data.password, data.type, true);
   };
 
   const logout = () => {
@@ -93,10 +99,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     localStorage.removeItem('sportconnect:user');
     localStorage.removeItem('sportconnect:token');
+    sessionStorage.removeItem('sportconnect:user');
+    sessionStorage.removeItem('sportconnect:token');
+  };
+
+  const forgotPassword = async (email: string) => {
+    const response = await fetch(`${apiBase}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Falha ao solicitar recuperação de senha');
+    }
+    return data;
+  };
+
+  const resetPassword = async (token: string, password: string) => {
+    const response = await fetch(`${apiBase}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Falha ao redefinir senha');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

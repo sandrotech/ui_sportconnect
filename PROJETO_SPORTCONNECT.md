@@ -2,269 +2,127 @@
 
 ## ✨ Visão Geral
 
-SportConnect é uma plataforma completa que conecta **Arenas**, **Atletas** e **Profissionais** (juízes, professores, técnicos) em um só lugar. Desenvolvida com React, TypeScript, Tailwind CSS e Motion (Framer Motion).
+SportConnect é uma plataforma completa que conecta **Arenas**, **Atletas** e **Profissionais** (juízes, professores, técnicos) em um só lugar. Desenvolvida com React 18, TypeScript, Tailwind CSS 4 e Motion (Framer Motion).
 
-## 🎨 Identidade Visual
+## 🎨 Design System Skill (Guia de Estilo & Componentes)
 
-### Paleta de Cores
-- **Azul Escuro**: #000273 (Tecnologia e confiança)
-- **Azul Vibrante**: #004ef9 (Movimento e energia)
-- **Laranja**: #ff4b00 (Ação e esportividade)
-- **Branco Gelo**: #f8f8f8 (Limpeza e contraste)
+Este guia serve como referência técnica para a criação e manutenção de interfaces no ecossistema SportConnect, focando em uma estética **premium**, **mobile-first** e **consistente**.
 
-### Tipografia
-- **Títulos**: Montserrat SemiBold Italic
-- **Corpo**: Poppins / Inter Regular
+---
+
+### 1. 🌈 Paleta de Cores e Tokens Semânticos
+
+O sistema utiliza variáveis CSS fundamentais para garantir suporte nativo a **Light/Dark Mode**.
+
+#### **Cores de Marca (Brand)**
+- **Primary**: `#030213` (Light) | `oklch(0.985 0 0)` (Dark). Usada para textos principais e elementos de alto destaque.
+- **Secondary**: `oklch(0.95 0.0058 264.53)` (Light) | `oklch(0.269 0 0)` (Dark). Usada para fundos alternativos e elementos de suporte.
+- **Accent**: `#e9ebef` (Light) | `oklch(0.269 0 0)` (Dark). Usada para destaques sutis e backgrounds de hover.
+
+#### **Cores de Interface (Furniture)**
+- **Background**: `#ffffff` (Light) | `oklch(0.145 0 0)` (Dark).
+- **Foreground (Texto)**: `oklch(0.145 0 0)` (Light) | `oklch(0.985 0 0)` (Dark).
+- **Border**: `rgba(0,0,0,0.1)` (Light) | `oklch(0.269 0 0)` (Dark).
+- **Input Background**: `#f3f3f5` (Light) | `oklch(0.269 0 0)` (Dark).
+
+#### **Perfis de Dashboard (Gradientes)**
+- **Arena**: `from-[#004ef9] to-[#0066ff]` (Azul Vibrante)
+- **Atleta**: `from-[#ff4b00] to-[#ff6b00]` (Laranja Esportivo)
+- **Profissional**: `from-purple-500 to-purple-600` (Roxo Real)
+
+---
+
+### 2. 🔲 Estilos de Cards
+
+Os cards são a base da nossa organização de conteúdo.
+
+- **Dashboard Card (Glassmorphism)**:
+  - Estilo: `bg-white/80 backdrop-blur-md border border-white/20 shadow-xl`
+  - Radius: `var(--radius-xl)` (1.25rem+)
+  - Uso: Containers principais em dashboards.
+- **Elevated Card**:
+  - Estilo: `bg-card border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)]`
+  - Hover: `whileHover={{ y: -4, shadow: "0_20px_40px_rgba(0,0,0,0.08)" }}`
+  - Uso: Features e listas de itens.
+- **Outline Card**:
+  - Estilo: `bg-transparent border-2 border-border`
+  - Uso: Elementos secundários ou formulários.
+
+---
+
+### 3. 📊 Gráficos e Visualização (Charts)
+
+Integração com **Recharts**, seguindo uma estética minimalista.
+
+- **Paletas de Gráfico**:
+  - `Chart 1-5`: Tokens `--chart-1` a `--chart-5` (oklch adaptativo).
+- **Estilo Visual**:
+  - **Grids**: Sempre horizontais, pontilhados, cor `var(--border)`.
+  - **Tooltips**: Customizados com `bg-card`, `border-border` e `rounded-lg`.
+  - **Eixos**: Textos em `muted-foreground`, tamanho `12px`, sem linhas de eixo visíveis.
+  - **Animações**: Entradas suaves com `duration={1200}`.
+
+---
+
+### 4. ⌨️ Entradas de Dados (Inputs & Forms)
+
+- **Input Minimalista**:
+  - `h-12 px-4 rounded-xl bg-input-background border-none focus:ring-2 focus:ring-ring transition-all`
+- **Switch/Toggle**:
+  - `bg-switch-background` quando inativo, `bg-primary` quando ativo.
+- **Labels**:
+  - Estilo: `text-sm font-medium text-foreground/80 mb-1.5 ml-1`.
+
+---
+
+### 5. 🖱️ Ações (Buttons & Modals)
+
+- **Botões**:
+  - **Primary**: `bg-primary text-primary-foreground hover:opacity-90`
+  - **Outline**: `border-2 border-border hover:bg-accent`
+  - **Ghost**: `hover:bg-accent text-muted-foreground`
+  - **Radius**: Sempre `rounded-full` ou `rounded-xl`.
+- **Modais (Dialogs)**:
+  - **Overlay**: `bg-black/40 backdrop-blur-sm`
+  - **Content**: Entrada via `motion` (scale 0.95 -> 1, opacity 0 -> 1).
+  - **Mobile**: Em telas pequenas, modais devem converter para **Drawer** (bottom sheet).
+
+---
+
+### 6. 📱 Mobile-First & Responsividade
+
+- **Breakpoints**: 
+  - `xs: 480px`, `sm: 640px`, `md: 768px`, `lg: 1024px`, `xl: 1280px`.
+- **Principais Regras**:
+  - Grids de Dashboard: `grid-cols-1` em mobile, `grid-cols-2/3` em desktop.
+  - Espaçamentos: `p-4` em mobile, `p-8` em desktop.
+  - Navegação: Barra inferior ou menu hambúrguer em mobile, sidebar fixa em desktop.
+
+---
 
 ## 📁 Estrutura do Projeto
 
 ```
 /src/app/
-├── context/
-│   └── AuthContext.tsx          # Gerenciamento de autenticação
 ├── components/
-│   ├── Header.tsx               # Cabeçalho global
-│   ├── Footer.tsx               # Rodapé global
-│   └── figma/
-│       └── ImageWithFallback.tsx
+│   ├── ui/                      # Shadcn/Atomic (Button, Input, Card)
+│   ├── Header.tsx               # Global Header
+│   └── RouteChangeLoader.tsx    # Transição visual entre rotas
 ├── pages/
-│   ├── Home.tsx                 # Página inicial institucional
-│   ├── Login.tsx                # Sistema de login multi-perfil
+│   ├── Home.tsx                 # Institucional
+│   ├── Login.tsx                # Auth multi-perfil
 │   └── dashboard/
-│       ├── ArenaDashboard.tsx   # Layout do dashboard Arena
-│       ├── AtletaDashboard.tsx  # Dashboard completo Atleta
-│       ├── ProfissionalDashboard.tsx # Dashboard completo Profissional
-│       └── arena/
-│           ├── ArenaHome.tsx    # Dashboard inicial da Arena
-│           └── Disponibilidade.tsx # ⭐ Gestão de disponibilidade de quadras
-└── App.tsx                      # Roteamento principal
+│       ├── ArenaDashboard.tsx   # Perfil Arena
+│       ├── AtletaDashboard.tsx  # Perfil Atleta
+│       └── ProfissionalDashboard.tsx # Perfil Profissional
 ```
 
-## 🌐 Páginas Implementadas
+## � Tecnologias & Fluxos
 
-### Site Institucional (Público)
-- ✅ **Home** - Hero animado, stats, benefícios, esportes, depoimentos
-- ✅ **Arenas** - Apresentação de planos (Starter, Pro, Scale)
-- ✅ **Atletas** - Recursos para jogadores
-- ✅ **Profissionais** - Informações para juízes e técnicos
-- ✅ **Marketplace** - Catálogo de produtos esportivos
-- ✅ **Blog** - Artigos sobre gestão, atletas e tecnologia
-- ✅ **Parceiros** - Logos de parceiros
-- ✅ **Contato** - Formulário de contato
-
-### Sistema de Login
-- ✅ **Multi-perfil** - Seleção de tipo (Arena, Atleta, Profissional)
-- ✅ **Telas específicas** - Design customizado para cada tipo
-- ✅ **Autenticação** - Context API para gerenciamento de sessão
-
-## 🏟️ Dashboard Arena (Completo)
-
-### Módulos Implementados:
-
-#### 1. **Dashboard Inicial**
-- KPIs principais (Ocupação, Reservas, Faturamento, No-Show)
-- Gráficos de ocupação semanal (LineChart)
-- Gráficos de faturamento (BarChart)
-- Distribuição de esportes (PieChart)
-- Feed de atividades recentes
-
-#### 2. **⭐ Disponibilidade de Quadras** (Funcionalidade Destacada)
-- Grade horária visual (6h às 20h)
-- Gerenciamento por dia da semana e quadra
-- Configuração de esportes, duração, preço e intervalo
-- Sistema de bloqueio/desbloqueio de horários
-- Cálculo de receita potencial
-- Publicação de disponibilidade para atletas
-- Design estilo Apple Calendar
-- Cards informativos de performance
-
-**Recursos da Tela:**
-- Seletor visual de dias da semana
-- Seletor de quadras com cores distintas
-- Status visual (Disponível/Bloqueado)
-- Edição inline de horários
-- Instruções de uso integradas
-- Métricas de disponibilidade
-
-#### 3. **Reservas e Agenda** (Placeholder)
-- Lista de reservas com status
-- Filtros por esporte e quadra
-- Criação manual de reservas
-
-#### 4. **Financeiro** (Placeholder)
-- Relatórios de transações
-- PIX Split automático
-- Exportação de dados
-
-#### 5. **Relatórios e IA** (Placeholder)
-- Previsão de demanda
-- Análise de horários rentáveis
-- Insights de no-show
-
-#### 6. **Clientes** (Placeholder)
-- Lista de usuários
-- Histórico de reservas
-- Feedback dos clientes
-
-#### 7. **Configurações** (Placeholder)
-- Dados da arena
-- Esportes oferecidos
-- Políticas de cancelamento
-
-## 🏃 Dashboard Atleta (Completo)
-
-### Funcionalidades:
-- **Stats Cards**: Ranking, partidas, saldo e vitórias
-- **Explorar Arenas**: 
-  - Busca por esporte/localização
-  - Cards de arenas com distância e avaliação
-  - Status de disponibilidade
-  - Filtros de esportes oferecidos
-- **Mapa Interativo**: Placeholder para arenas próximas
-- **Próximas Partidas**: Lista de reservas agendadas
-- **Ações Rápidas**: 
-  - Meus Grupos
-  - Ver Ranking
-  - Adicionar Créditos
-
-### Recursos:
-- Design moderno com glassmorphism
-- Cards interativos com hover effects
-- Busca em tempo real
-- Avaliação por estrelas
-- Indicador de distância
-
-## 👨‍⚖️ Dashboard Profissional (Completo)
-
-### Funcionalidades:
-- **Stats Cards**: Trabalhos, comissões, avaliação e histórico
-- **Agenda Semanal**:
-  - Visualização em grade (7 dias)
-  - Status por horário (confirmado/pendente)
-  - Valor por trabalho
-  - Cores por status
-- **Oportunidades**:
-  - Listagem de partidas disponíveis
-  - Informações de esporte, arena, data/hora
-  - Nível da partida
-  - Botões Aceitar/Recusar
-- **Histórico de Serviços**:
-  - Feedbacks recebidos
-  - Avaliações por estrelas
-  - Arenas trabalhadas
-- **Comissões e Pagamentos**:
-  - Valores pendentes
-  - Histórico mensal
-  - Solicitação de saque via PIX
-
-## 🎨 Design e UX
-
-### Características:
-- **Glassmorphism**: Efeitos de vidro translúcido
-- **Gradientes Suaves**: Transições visuais elegantes
-- **Animações**: Motion (Framer Motion) para microinterações
-- **Responsivo**: 5 breakpoints (mobile, tablet, notebook, desktop, TV)
-- **Transições**: Fade + slide entre telas
-- **Hover Effects**: Escala e sombra em botões e cards
-- **Sombras Coloridas**: Shadow glow em elementos principais
-
-### Cores por Perfil:
-- **Arena**: Gradiente azul (#004ef9 → #0066ff)
-- **Atleta**: Gradiente laranja (#ff4b00 → #ff6b00)  
-- **Profissional**: Gradiente roxo (purple-500 → purple-600)
-
-## 📊 Tecnologias Utilizadas
-
-- **React 18.3** - Framework principal
-- **TypeScript** - Tipagem estática
-- **React Router DOM** - Navegação entre páginas
-- **Tailwind CSS 4** - Estilização utilitária
-- **Motion (Framer Motion 12)** - Animações
-- **Recharts** - Gráficos e visualizações
-- **Lucide React** - Ícones
-- **Context API** - Gerenciamento de estado global
-
-## 🔐 Autenticação
-
-Sistema de autenticação multi-perfil com:
-- Context API para estado global
-- Protected Routes por tipo de usuário
-- Redirecionamento automático para dashboards específicos
-- Mock de dados de usuário
-
-## 🚀 Fluxos Principais
-
-### 1. Fluxo Arena
-```
-Login Arena → Dashboard → Disponibilidade → Configurar Quadras → Publicar
-```
-
-### 2. Fluxo Atleta
-```
-Login Atleta → Dashboard → Explorar Arenas → Ver Horários → Reservar
-```
-
-### 3. Fluxo Profissional
-```
-Login Profissional → Dashboard → Oportunidades → Aceitar → Agenda → Comissões
-```
-
-## 📱 Responsividade
-
-O sistema foi desenvolvido com design responsivo completo:
-- **Mobile First**: Layout otimizado para smartphones
-- **Tablet**: Adaptação para iPads
-- **Desktop**: Experiência completa em telas grandes
-- **TV**: Suporte para monitores 4K
-
-## 🎯 Destaques do Projeto
-
-### ⭐ Tela de Disponibilidade de Quadras
-A funcionalidade mais importante para arenas, permitindo:
-- Gerenciamento visual de horários
-- Configuração granular (esporte, preço, duração)
-- Publicação sincronizada com portal de atletas
-- Design inspirado em calendários profissionais
-- Cálculo automático de receita potencial
-
-### 🎨 Home Institucional
-- Hero section com vídeo de fundo
-- Animações suaves com Motion
-- Cards de benefícios com ícones
-- Carrossel de esportes
-- Depoimentos de usuários
-- CTA estratégicos
-
-### 📊 Dashboards Completos
-Três dashboards totalmente funcionais e distintos, cada um com:
-- Design específico por perfil
-- KPIs relevantes
-- Gráficos interativos
-- Ações contextuais
-
-## 💡 Diferenciais
-
-1. **Sistema Multi-Perfil**: Três tipos de usuários integrados
-2. **Design Premium**: Glassmorphism e gradientes sofisticados
-3. **Funcional**: Dados mockados realistas
-4. **Escalável**: Estrutura preparada para backend
-5. **Moderno**: Tecnologias atuais (2024/2025)
-6. **Completo**: Site + Login + 3 Dashboards + 8 páginas institucionais
-
-## 📝 Próximos Passos (Sugestões)
-
-Para transformar em produção:
-1. Integrar com backend (Node.js + Express ou Supabase)
-2. Implementar sistema de pagamentos real (PIX)
-3. Adicionar WebSockets para atualizações em tempo real
-4. Integrar mapas reais (Google Maps ou Mapbox)
-5. Sistema de notificações
-6. Upload de imagens
-7. Chat entre usuários
-8. Sistema de avaliações completo
-9. Relatórios PDF
-10. Aplicativo mobile (React Native)
+- **Auth**: Gerenciada via `AuthContext`, com rotas protegidas (`ProtectedRoute`).
+- **Animações**: Uso intensivo de `framer-motion` para transições de página e feedback de UI.
+- **Ícones**: Padronizados com `lucide-react`.
 
 ---
 
-**Desenvolvido com foco em design premium, funcionalidade e experiência do usuário.**
+**Este documento é a "Skill" definitiva para qualquer geração de código ou modificação no SportConnect.**

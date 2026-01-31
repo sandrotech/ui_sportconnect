@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Users, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Logo } from '../components/ui/Logo';
 import {
   Select,
   SelectContent,
@@ -77,9 +78,11 @@ export function Cadastro() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/70 to-[#000273]/40" />
         <div className="relative z-10 h-full flex items-center justify-center p-12">
           <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center shadow-2xl">
-              <Users className="w-16 h-16 text-white" />
-            </div>
+            <Logo 
+              className="h-48 md:h-64 w-auto mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]" 
+              imageClassName="scale-110"
+              showText 
+            />
             <h1 className="font-montserrat italic font-semibold text-5xl text-white mb-4">
               Crie sua conta
             </h1>
@@ -94,6 +97,10 @@ export function Cadastro() {
           animate={{ opacity: 1, x: 0 }}
           className="w-full max-w-md rounded-3xl bg-white/60 backdrop-blur-md shadow-xl border border-white/40 p-8"
         >
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo className="h-16 w-auto" />
+          </div>
+
           <Link to="/login" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors">
             <ArrowLeft className="w-5 h-5" />
             Voltar
