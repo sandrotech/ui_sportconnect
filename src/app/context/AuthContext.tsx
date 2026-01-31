@@ -11,9 +11,9 @@ interface User {
 }
 
 type RegisterData =
-  | { type: 'arena'; name: string; email: string; password: string; nomeArena: string; cnpj: string }
-  | { type: 'atleta'; name: string; email: string; password: string; apelido: string }
-  | { type: 'profissional'; name: string; email: string; password: string; especialidade: string; valorHora: number };
+  | { type: 'arena'; name: string; email: string; password: string; cpf: string; dataNascimento: string; nomeArena: string; cnpj: string }
+  | { type: 'atleta'; name: string; email: string; password: string; cpf: string; dataNascimento: string; apelido: string }
+  | { type: 'profissional'; name: string; email: string; password: string; cpf: string; dataNascimento: string; especialidade: string; valorHora: number };
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +23,8 @@ interface AuthContextType {
   logout: () => void;
   forgotPassword: (email: string) => Promise<{ message: string; token?: string }>;
   resetPassword: (token: string, password: string) => Promise<void>;
+  verifyIdentity: (cpf: string, dataNascimento: string, email: string) => Promise<{ message: string; token: string; userId: number }>;
+  resetPasswordWithVerification: (userId: number, newPassword: string) => Promise<{ message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,8 +130,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const verifyIdentity = async (cpf: string, dataNascimento: string, email: string) => {
+    const response = await fetch(`${apiBase}/auth/verify-identity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cpf, dataNascimento, email }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Falha ao verificar identidade');
+    }
+    return data;
+  };
+
+  const resetPasswordWithVerification = async (userId: number, newPassword: string) => {
+    const response = await fetch(`${apiBase}/auth/reset-password-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Falha ao redefinir senha');
+    }
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification }}>
       {children}
     </AuthContext.Provider>
   );

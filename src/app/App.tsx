@@ -32,6 +32,8 @@ import { Estatisticas } from './pages/dashboard/atleta/Estatisticas';
 import { Perfil } from './pages/dashboard/atleta/Perfil';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { VerifyIdentity } from './pages/VerifyIdentity';
+import { ResetPasswordWithVerification } from './pages/ResetPasswordWithVerification';
 import { Cadastro } from './pages/Cadastro';
 
 
@@ -916,6 +918,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/login/:type" element={<Login />} />
           <Route path="/esqueceu-senha" element={<ForgotPassword />} />
+          <Route path="/verificar-identidade" element={<VerifyIdentity />} />
+          <Route path="/redefinir-senha-verificacao" element={<ResetPasswordWithVerification />} />
           <Route path="/redefinir-senha" element={<ResetPassword />} />
           <Route path="/cadastro" element={<Cadastro />} />
 

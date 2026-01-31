@@ -30,7 +30,7 @@ export const useCityAutocomplete = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchCities = useCallback(async (searchTerm: string) => {
     if (searchTerm.length < minLength) {

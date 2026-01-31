@@ -13,7 +13,9 @@ import {
   Save, 
   ChevronRight,
   Trophy,
-  Lock
+  Lock,
+  Calendar,
+  IdCard
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useIsMobile } from '../../../components/ui/use-mobile';
@@ -54,6 +56,8 @@ export function Perfil() {
     telefone: '',
     localizacao: '',
     avatar: '',
+    cpf: '',
+    dataNascimento: '',
   });
 
   const {
@@ -99,11 +103,23 @@ export function Perfil() {
           telefone: data.telefone || '',
           localizacao: data.localizacao || '',
           avatar: data.user?.avatar ? `${apiBase}/${data.user.avatar}` : '',
+          cpf: data.user?.cpf || '',
+          dataNascimento: data.user?.dataNascimento ? data.user.dataNascimento.split('T')[0] : '',
         });
       })
       .catch(err => console.error('Erro ao carregar perfil:', err));
     }
   }, [token, apiBase]);
+
+  // Função para formatar CPF
+  const formatCPF = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
+    if (match) {
+      return `${match[1]}.${match[2]}.${match[3]}-${match[4]}`;
+    }
+    return cleaned;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -113,6 +129,10 @@ export function Perfil() {
       const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
       const masked = formatPhoneNumber(digitsOnly);
       setFormData(prev => ({ ...prev, [name]: masked }));
+    } else if (name === 'cpf') {
+      // Formata CPF
+      const formatted = formatCPF(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
     } else if (name === 'localizacao') {
       setFormData(prev => ({ ...prev, [name]: value }));
       searchCities(value);
@@ -420,6 +440,36 @@ export function Perfil() {
                               type="email" 
                               name="email"
                               value={formData.email}
+                              onChange={handleInputChange}
+                              className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 placeholder-gray-400 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">CPF</label>
+                          <div className="relative">
+                            <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <input 
+                              type="text" 
+                              name="cpf"
+                              value={formData.cpf}
+                              onChange={handleInputChange}
+                              className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 placeholder-gray-400 transition-all"
+                              placeholder="000.000.000-00"
+                              maxLength={14}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">Data de Nascimento</label>
+                          <div className="relative">
+                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <input 
+                              type="date" 
+                              name="dataNascimento"
+                              value={formData.dataNascimento}
                               onChange={handleInputChange}
                               className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 placeholder-gray-400 transition-all"
                             />

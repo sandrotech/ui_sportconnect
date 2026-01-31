@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users, ArrowLeft, User, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/ui/Logo';
 import {
@@ -33,6 +33,8 @@ export function Cadastro() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [type, setType] = useState<UserType>('atleta');
+  const [cpf, setCpf] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
   const [apelido, setApelido] = useState('');
   const [nomeArena, setNomeArena] = useState('');
   const [cnpj, setCnpj] = useState('');
@@ -42,6 +44,21 @@ export function Cadastro() {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Função para formatar CPF
+  const formatCPF = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
+    if (match) {
+      return `${match[1]}.${match[2]}.${match[3]}-${match[4]}`;
+    }
+    return cleaned;
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setCpf(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +71,11 @@ export function Cadastro() {
     setLoading(true);
     try {
       if (type === 'arena') {
-        await register({ type, name, email, password, nomeArena, cnpj });
+        await register({ type, name, email, password, cpf, dataNascimento, nomeArena, cnpj });
       } else if (type === 'atleta') {
-        await register({ type, name, email, password, apelido });
+        await register({ type, name, email, password, cpf, dataNascimento, apelido });
       } else {
-        await register({ type, name, email, password, especialidade, valorHora: Number(valorHora) });
+        await register({ type, name, email, password, cpf, dataNascimento, especialidade, valorHora: Number(valorHora) });
       }
       navigate(`/dashboard/${type}`);
     } catch (err) {
@@ -135,6 +152,37 @@ export function Cadastro() {
                 placeholder="seu@email.com"
                 required
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">CPF</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={handleCpfChange}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="date"
+                    value={dataNascimento}
+                    onChange={(e) => setDataNascimento(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
