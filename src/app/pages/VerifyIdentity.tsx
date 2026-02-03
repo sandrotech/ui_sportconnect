@@ -3,10 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowLeft, User, Calendar, Mail, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useDateMask, convertDateToISO } from '../hooks/useDateMask';
 
 export function VerifyIdentity() {
   const [cpf, setCpf] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
+  const { date: dataNascimento, setDate: setDataNascimento, handleDateChange } = useDateMask();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +37,16 @@ export function VerifyIdentity() {
     setLoading(true);
 
     try {
-      const result = await verifyIdentity(cpf, dataNascimento, email);
+      // Converter data do formato DD/MM/YYYY para YYYY-MM-DD
+      const dataNascimentoISO = convertDateToISO(dataNascimento);
+      
+      if (!dataNascimentoISO) {
+        setError('Por favor, insira uma data válida no formato DD/MM/AAAA');
+        setLoading(false);
+        return;
+      }
+
+      const result = await verifyIdentity(cpf, dataNascimentoISO, email);
       setSuccess(true);
       setUserId(result.userId);
       
@@ -126,10 +136,12 @@ export function VerifyIdentity() {
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
-                      type="date"
+                      type="text"
                       value={dataNascimento}
-                      onChange={(e) => setDataNascimento(e.target.value)}
+                      onChange={(e) => handleDateChange(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                      placeholder="DD/MM/AAAA"
+                      maxLength={10}
                       required
                       disabled={loading}
                     />
