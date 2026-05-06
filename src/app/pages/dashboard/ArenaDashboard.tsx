@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Calendar, Clock, DollarSign, BarChart3, Users, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../components/ui/use-mobile';
 import { BottomNav } from '../../components/BottomNav';
@@ -30,16 +30,20 @@ export function ArenaDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
-      {/* Toggle Button */}
-      <button
-        type="button"
-        aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
-        title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
-        onClick={() => setSidebarOpen((v) => !v)}
-        className={`fixed top-4 left-4 z-50 h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors ${isMobile ? 'hidden' : 'flex'}`}
-      >
-        {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+      {/* Toggle Button (Desktop) */}
+      {!isMobile && (
+        <button
+          type="button"
+          aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+          title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+          onClick={() => setSidebarOpen((v) => !v)}
+          className={`fixed top-4 z-50 h-10 w-10 items-center justify-center rounded-xl bg-white text-[#000273] shadow-md border border-slate-200/60 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 flex ${
+            sidebarOpen ? 'left-[272px]' : 'left-4'
+          }`}
+        >
+          {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+        </button>
+      )}
 
       {/* Mobile Overlay */}
       {isMobile && sidebarOpen && (
@@ -56,8 +60,8 @@ export function ArenaDashboard() {
           } ${sidebarOpen ? 'md:w-64' : 'md:w-0'} w-[85vw]`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-6 border-b border-white/10">
+          {/* Logo and Header */}
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Logo variant="symbol" className="w-10 h-10" />
               {sidebarOpen && (
@@ -67,6 +71,17 @@ export function ArenaDashboard() {
                 </div>
               )}
             </div>
+            {isMobile && sidebarOpen && (
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+                aria-label="Fechar menu"
+                title="Fechar menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
 
           {/* User Info */}
