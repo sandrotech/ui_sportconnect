@@ -37,11 +37,11 @@ export function ArenaDashboard() {
           aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
           title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
           onClick={() => setSidebarOpen((v) => !v)}
-          className={`fixed top-4 z-50 h-10 w-10 items-center justify-center rounded-xl bg-white text-[#000273] shadow-md border border-slate-200/60 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 flex ${
-            sidebarOpen ? 'left-[272px]' : 'left-4'
-          }`}
+          className={`fixed z-50 h-7 w-7 items-center justify-center rounded-full bg-white text-[#000273] shadow-md border border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 flex ${
+            sidebarOpen ? 'left-64 -translate-x-1/2' : 'left-3 translate-x-0'
+          } top-[88px] -translate-y-1/2`}
         >
-          {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
       )}
 
