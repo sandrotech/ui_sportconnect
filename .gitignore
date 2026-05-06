@@ -4,3 +4,4 @@ node_modules/.vite/
 .env 
 .env.local 
 /sportconnect-api/
+/api_sportconnect/

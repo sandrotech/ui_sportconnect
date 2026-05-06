@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Building2, Users, Trophy, TrendingUp, MapPin, Zap, CreditCard, BarChart3, Volleyball, Waves, Circle, User, Target, Award } from 'lucide-react';
+import { Building2, Users, TrendingUp, MapPin, Zap, CreditCard, BarChart3, Volleyball, Waves, Circle, User, Target, Award, Calendar, Trophy } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
 export function Home() {
   const stats = [
-    { value: '1.000+', label: 'Arenas Conectadas' },
-    { value: '50.000+', label: 'Atletas Ativos' },
-    { value: '25', label: 'Esportes' },
-    { value: '4.8', label: 'Avaliação Média' },
+    { icon: Calendar, title: 'Agendamento', desc: 'Reserva rápida e otimização de horários em tempo real' },
+    { icon: Users, title: 'Comunidade', desc: 'Conecte-se com parceiros e organize partidas' },
+    { icon: Building2, title: 'Gestão', desc: 'Controle total de mensalistas, horários e caixa' },
+    { icon: Trophy, title: 'Esportes', desc: 'Regras e estatísticas para cada modalidade' },
   ];
 
   const benefits = [
@@ -25,12 +25,6 @@ export function Home() {
     { icon: User, name: 'Natação', color: 'from-cyan-500 to-cyan-600' },
     { icon: Target, name: 'Padel', color: 'from-purple-500 to-purple-600' },
     { icon: Award, name: 'Basquete', color: 'from-red-500 to-red-600' },
-  ];
-
-  const testimonials = [
-    { name: 'Arena Premium', type: 'Arena', text: 'Aumentamos nossa ocupação em 40% nos primeiros 3 meses. A plataforma é incrível!' },
-    { name: 'João Silva', type: 'Atleta', text: 'Encontro quadras disponíveis em segundos. A experiência é perfeita!' },
-    { name: 'Carlos Oliveira', type: 'Profissional', text: 'Minha agenda está sempre cheia. Ótima forma de conectar com atletas!' },
   ];
 
   return (
@@ -84,20 +78,25 @@ export function Home() {
               </Link>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            {/* Stats / System Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto px-4">
               {stats.map((stat, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 + index * 0.1 }}
-                  className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1, duration: 0.6 }}
+                  className="group relative bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-white/5"
                 >
-                  <div className="text-3xl md:text-4xl font-montserrat font-semibold italic text-white mb-2">
-                    {stat.value}
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-white/10 flex items-center justify-center text-white/95 mb-4 group-hover:scale-110 transition-all group-hover:bg-[#ff4b00]/20 group-hover:text-[#ff4b00]">
+                    <stat.icon className="w-6 h-6" />
                   </div>
-                  <div className="text-white/60 text-sm">{stat.label}</div>
+                  <h3 className="font-montserrat font-semibold italic text-xl md:text-2xl text-white mb-2 text-center group-hover:text-[#ff4b00] transition-colors">
+                    {stat.title}
+                  </h3>
+                  <p className="text-white/70 text-xs md:text-sm leading-relaxed text-center">
+                    {stat.desc}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -163,41 +162,6 @@ export function Home() {
                 <div className={`bg-gradient-to-br ${sport.color} rounded-2xl p-8 text-center shadow-lg hover:shadow-2xl transition-all hover:scale-105 cursor-pointer`}>
                   <sport.icon className="w-12 h-12 text-white mx-auto mb-4" />
                   <p className="text-white font-semibold">{sport.name}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273] mb-4">
-              O que dizem sobre nós
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg border border-gray-100"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Trophy key={i} className="w-5 h-5 text-[#ff4b00] fill-[#ff4b00]" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 italic">"{testimonial.text}"</p>
-                <div>
-                  <p className="font-semibold text-[#000273]">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.type}</p>
                 </div>
               </motion.div>
             ))}

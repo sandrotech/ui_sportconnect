@@ -24,7 +24,7 @@ export function Login() {
     if (savedRememberMe) {
       const savedEmail = localStorage.getItem('sportconnect_remember_email');
       const savedPassword = localStorage.getItem('sportconnect_remember_password');
-      
+
       if (savedEmail) setEmail(savedEmail);
       if (savedPassword) {
         try {
@@ -44,7 +44,7 @@ export function Login() {
       setLoading(true);
       try {
         await login(email, password, selectedType, rememberMe);
-        
+
         if (rememberMe) {
           localStorage.setItem('sportconnect_remember_me', 'true');
           localStorage.setItem('sportconnect_remember_email', email);
@@ -169,7 +169,7 @@ export function Login() {
     profissional: {
       title: 'Login Profissional',
       color: 'from-purple-500 to-purple-600',
-      bg: 'https://images.unsplash.com/photo-1659411587993-4aa949993f25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWFjaCUyMHRlbm5pcyUyMGNvdXJ0fGVufDF8fHx8MTc2Njg1MjkxOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      bg: 'https://images.unsplash.com/photo-1748112441080-e9f13f17a57a?q=80&w=680&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     },
   }[selectedType];
 
@@ -187,10 +187,10 @@ export function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/80 to-[#000273]/40" />
         <div className="relative z-10 h-full flex items-center justify-center p-12">
           <div className="text-center">
-            <Logo 
-              className="h-48 md:h-64 w-auto mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]" 
-              imageClassName="scale-110"
-              showText 
+            <Logo
+              className="w-72 md:w-96 h-24 md:h-32 mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]"
+              imageClassName="scale-105"
+              showText
             />
           </div>
         </div>

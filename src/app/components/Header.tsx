@@ -97,7 +97,7 @@ export function Header() {
             />
             <div>
               <h1 className="font-montserrat italic font-semibold text-xl text-white">SportConnect</h1>
-              <p className="text-xs text-white/60">Conecte. Jogue. Evolua.</p>
+              <p className="text-xs text-white/60 hidden sm:block">Conecte. Jogue. Evolua.</p>
             </div>
           </Link>
 
@@ -152,7 +152,7 @@ export function Header() {
               <>
                 <Link
                   to="/login"
-                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-lg hover:shadow-[#ff4b00]/30 transition-all duration-300 hover:scale-[1.03] motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4b00]/60"
+                  className="hidden sm:inline-flex px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-lg hover:shadow-[#ff4b00]/30 transition-all duration-300 hover:scale-[1.03] motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff4b00]/60"
                 >
                   Entrar
                 </Link>
@@ -191,13 +191,14 @@ export function Header() {
           <div
             id="mobile-nav"
             className={[
-              "md:hidden fixed z-50 left-0 right-0 top-20",
-              "origin-top border-t border-white/10 bg-[#000273]/95 backdrop-blur-md",
+              "md:hidden absolute top-full left-0 right-0 z-50",
+              "origin-top border-b border-white/10 bg-[#000273]/95 backdrop-blur-md",
+              "max-h-[calc(100vh-5rem)] overflow-y-auto",
               "transition-all duration-300 motion-reduce:transition-none",
               mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none",
             ].join(" ")}
           >
-            <nav className="container mx-auto px-4 py-4 space-y-1">
+            <nav className="container mx-auto px-4 py-6 space-y-1">
               {navItems.map((item) => {
                 const active = isActive(item.href);
                 return (
@@ -236,6 +237,17 @@ export function Header() {
                   </Link>
                 );
               })}
+
+              {/* Botão Entrar adaptado para mobile */}
+              <div className="pt-4 border-t border-white/10 mt-4 px-3">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white font-medium hover:shadow-lg hover:shadow-[#ff4b00]/30 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  Entrar
+                </Link>
+              </div>
             </nav>
           </div>
         </>

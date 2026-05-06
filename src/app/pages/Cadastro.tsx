@@ -96,8 +96,8 @@ export function Cadastro() {
         <div className="relative z-10 h-full flex items-center justify-center p-12">
           <div className="text-center">
             <Logo 
-              className="h-48 md:h-64 w-auto mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]" 
-              imageClassName="scale-110"
+              className="w-72 md:w-96 h-24 md:h-32 mx-auto mb-2 drop-shadow-[0_0_30px_rgba(255,75,0,0.3)]" 
+              imageClassName="scale-105"
               showText 
             />
             <h1 className="font-montserrat italic font-semibold text-5xl text-white mb-4">
