@@ -64,7 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole };
     const mappedType = apiUser.role.toLowerCase() as UserType;
-    if (type && mappedType !== type) {
+    
+    // Permitir que o administrador master acesse todos os 3 portais (arena, atleta, profissional)
+    const isMasterAdmin = apiUser.email.toLowerCase() === 'admin@sportconnect.com';
+    const finalType = isMasterAdmin && type ? type : mappedType;
+
+    if (!isMasterAdmin && type && mappedType !== type) {
       throw new Error('Tipo de usuário inválido para estas credenciais');
     }
 
@@ -72,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: apiUser.id,
       name: apiUser.name,
       email: apiUser.email,
-      type: mappedType,
+      type: finalType,
     };
 
     setUser(nextUser);
