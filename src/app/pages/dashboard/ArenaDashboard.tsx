@@ -37,8 +37,8 @@ export function ArenaDashboard() {
           aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
           title={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
           onClick={() => setSidebarOpen((v) => !v)}
-          className={`fixed z-50 h-7 w-7 items-center justify-center rounded-full bg-white text-[#000273] shadow-md border border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 flex ${
-            sidebarOpen ? 'left-64 -translate-x-1/2' : 'left-3 translate-x-0'
+          className={`fixed z-50 h-7 w-7 items-center justify-center rounded-full bg-white text-[#000273] shadow-md border border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 flex -translate-x-1/2 ${
+            sidebarOpen ? 'left-64' : 'left-6'
           } top-[88px] -translate-y-1/2`}
         >
           {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -152,7 +152,7 @@ export function ArenaDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0 md:pl-12'}`}>
         <Outlet />
       </div>
 
