@@ -8,6 +8,7 @@ interface User {
   name: string;
   email: string;
   type: UserType;
+  isComplete?: boolean;
 }
 
 type RegisterData =
@@ -25,6 +26,7 @@ interface AuthContextType {
   resetPassword: (token: string, password: string) => Promise<void>;
   verifyIdentity: (cpf: string, dataNascimento: string, email: string) => Promise<{ message: string; token: string; userId: number }>;
   resetPasswordWithVerification: (userId: number, newPassword: string) => Promise<{ message: string }>;
+  loginWithGoogle: (credential: string, type: UserType) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -86,6 +88,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem('sportconnect:user', JSON.stringify(nextUser));
     storage.setItem('sportconnect:token', data.token);
+  };
+
+  const loginWithGoogle = async (credential: string, type: UserType) => {
+    const response = await fetch(`${apiBase}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential, role: type }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Falha ao autenticar com o Google');
+    }
+
+    const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole; isComplete?: boolean };
+    const mappedType = apiUser.role.toLowerCase() as UserType;
+
+    const nextUser = {
+      id: apiUser.id,
+      name: apiUser.name,
+      email: apiUser.email,
+      type: mappedType,
+      isComplete: apiUser.isComplete,
+    };
+
+    setUser(nextUser);
+    setToken(data.token);
+
+    localStorage.setItem('sportconnect:user', JSON.stringify(nextUser));
+    localStorage.setItem('sportconnect:token', data.token);
   };
 
   const register = async (data: RegisterData) => {
@@ -162,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

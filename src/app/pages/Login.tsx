@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Building2, Users, Trophy, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { Logo } from '../components/ui/Logo';
 
 type UserType = 'arena' | 'atleta' | 'profissional';
@@ -16,7 +17,7 @@ export function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,6 +59,21 @@ export function Login() {
         navigate(`/dashboard/${selectedType}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao autenticar');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
+    if (response.credential && selectedType) {
+      setLoading(true);
+      setError('');
+      try {
+        await loginWithGoogle(response.credential, selectedType);
+        navigate(`/dashboard/${selectedType}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
       } finally {
         setLoading(false);
       }
@@ -282,9 +298,33 @@ export function Login() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
 
+            {selectedType !== 'arena' && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-2 text-gray-500">Ou</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center w-full">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Ocorreu um erro no login com o Google.')}
+                    shape="pill"
+                    size="large"
+                    theme="outline"
+                    text="continue_with"
+                  />
+                </div>
+              </>
+            )}
+
             <div className="text-center text-sm text-gray-600">
               Não tem uma conta?{' '}
-              <Link to="/cadastro" className="text-[#004ef9] hover:text-[#0066ff] font-semibold">
+              <Link to={`/cadastro?type=${selectedType}`} className="text-[#004ef9] hover:text-[#0066ff] font-semibold">
                 Cadastre-se
               </Link>
             </div>

@@ -21,6 +21,7 @@ export function Header() {
       { label: "Profissionais", href: "/profissionais" },
       { label: "Marketplace", href: "/marketplace" },
       { label: "Blog", href: "/blog" },
+      { label: "Placar", href: "/placar" },
       { label: "Contato", href: "/contato" },
     ],
     []

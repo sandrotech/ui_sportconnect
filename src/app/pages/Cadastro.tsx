@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { motion } from 'motion/react';
-import { Users, ArrowLeft, User, Calendar } from 'lucide-react';
+import { Users, ArrowLeft, User, Calendar, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/ui/Logo';
 import {
@@ -28,11 +29,16 @@ const ESPECIALIDADES = [
 ];
 
 export function Cadastro() {
+  const [searchParams] = useSearchParams();
+  const urlType = searchParams.get('type') as UserType | null;
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [type, setType] = useState<UserType>('atleta');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [type] = useState<UserType>(urlType || 'atleta');
   const [cpf, setCpf] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [apelido, setApelido] = useState('');
@@ -42,7 +48,7 @@ export function Cadastro() {
   const [valorHora, setValorHora] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   // Função para formatar CPF
@@ -85,13 +91,48 @@ export function Cadastro() {
     }
   };
 
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
+    if (response.credential && type) {
+      setLoading(true);
+      setError('');
+      try {
+        await loginWithGoogle(response.credential, type);
+        navigate(`/dashboard/${type}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const config = {
+    arena: {
+      title: 'Crie sua conta Arena',
+      color: 'from-[#004ef9] to-[#0066ff]',
+      bg: 'https://images.unsplash.com/photo-1607667730466-3fe37a1842ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBhcmVuYSUyMGluZG9vcnxlbnwxfHx8fDE3NjY4NTI5MTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    },
+    atleta: {
+      title: 'Crie sua conta Atleta',
+      color: 'from-[#ff4b00] to-[#ff6b00]',
+      bg: 'https://images.unsplash.com/photo-1746003624976-64d50dd8a63a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdGhsZXRlcyUyMHBsYXlpbmclMjBzcG9ydHN8ZW58MXx8fHwxNzY2ODUyOTE5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    },
+    profissional: {
+      title: 'Crie sua conta Profissional',
+      color: 'from-purple-500 to-purple-600',
+      bg: 'https://images.unsplash.com/photo-1748112441080-e9f13f17a57a?q=80&w=680&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    },
+  }[type];
+
   return (
     <div className="min-h-screen relative grid grid-cols-1 lg:grid-cols-2">
       <div className="absolute inset-0 lg:hidden">
+        <img src={config.bg} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/25 to-[#000273]/10" />
       </div>
 
       <div className="hidden lg:block relative bg-[#000273]">
+        <img src={config.bg} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-br from-[#000273]/70 to-[#000273]/40" />
         <div className="relative z-10 h-full flex items-center justify-center p-12">
           <div className="text-center">
@@ -101,7 +142,7 @@ export function Cadastro() {
               showText 
             />
             <h1 className="font-montserrat italic font-semibold text-5xl text-white mb-4">
-              Crie sua conta
+              {config.title}
             </h1>
             <p className="text-xl text-white/70">Acesse recursos para Arenas, Atletas e Profissionais</p>
           </div>
@@ -112,46 +153,48 @@ export function Cadastro() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md rounded-3xl bg-white/60 backdrop-blur-md shadow-xl border border-white/40 p-8"
+          className="w-full max-w-xl rounded-3xl bg-white/60 backdrop-blur-md shadow-xl border border-white/40 p-6 sm:p-8"
         >
           <div className="lg:hidden flex justify-center mb-8">
             <Logo className="h-16 w-auto" />
           </div>
 
-          <Link to="/login" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors">
+          <Link to="/login" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors">
             <ArrowLeft className="w-5 h-5" />
             Voltar
           </Link>
 
-          <div className="mb-8">
-            <h2 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-2">
+          <div className="mb-6">
+            <h2 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">
               Cadastro
             </h2>
             <p className="text-gray-600">Preencha seus dados para começar</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nome completo</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                placeholder="Seu nome"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                placeholder="seu@email.com"
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                  placeholder="Seu nome"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -187,47 +230,47 @@ export function Cadastro() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar senha</label>
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de usuário</label>
-              <div className="grid grid-cols-3 gap-3">
-                {(['arena', 'atleta', 'profissional'] as UserType[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setType(t)}
-                    className={`px-4 py-3 rounded-xl border transition-all ${
-                      type === t
-                        ? 'border-[#004ef9] bg-[#004ef9]/10 text-[#004ef9]'
-                        : 'border-gray-300 text-gray-700 hover:border-[#004ef9]'
-                    }`}
-                  >
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             {type === 'arena' ? (
               <div className="space-y-4">
@@ -316,6 +359,30 @@ export function Cadastro() {
             >
               {loading ? 'Criando conta...' : 'Criar conta'}
             </button>
+
+            {type !== 'arena' && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-2 text-gray-500">Ou continuar com</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-center w-full">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Ocorreu um erro no cadastro com o Google.')}
+                    shape="pill"
+                    size="large"
+                    theme="outline"
+                    text="continue_with"
+                  />
+                </div>
+              </>
+            )}
 
             <p className="text-center text-sm text-gray-600">
               Já tem conta?{' '}

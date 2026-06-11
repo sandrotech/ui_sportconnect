@@ -35,6 +35,7 @@ import { ResetPassword } from './pages/ResetPassword';
 import { VerifyIdentity } from './pages/VerifyIdentity';
 import { ResetPasswordWithVerification } from './pages/ResetPasswordWithVerification';
 import { Cadastro } from './pages/Cadastro';
+import { Placar } from './pages/Placar';
 
 
 // Simple placeholder pages for institutional sections
@@ -913,6 +914,9 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/parceiros" element={<Parceiros />} />
           <Route path="/contato" element={<Contato />} />
+
+          {/* Standalone Fullscreen Routes */}
+          <Route path="/placar" element={<Placar />} />
 
           {/* Login Routes */}
           <Route path="/login" element={<Login />} />
