@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type UserType = 'arena' | 'atleta' | 'profissional' | null;
+type UserType = 'arena' | 'atleta' | 'profissional' | 'admin' | null;
 type ApiRole = 'ARENA' | 'ATLETA' | 'PROFISSIONAL';
 
 interface User {
@@ -19,6 +19,7 @@ type RegisterData =
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isAdmin: boolean;
   login: (email: string, password: string, type: UserType, remember?: boolean) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
@@ -34,7 +35,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '';
   const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
+  const isAdmin = !!user && user.email.toLowerCase() === adminEmail.toLowerCase();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sportconnect:user') || sessionStorage.getItem('sportconnect:user');
@@ -68,8 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mappedType = apiUser.role.toLowerCase() as UserType;
     
     // Permitir que o administrador master acesse todos os 3 portais (arena, atleta, profissional)
-    const isMasterAdmin = apiUser.email.toLowerCase() === 'admin@sportconnect.com';
-    const finalType = isMasterAdmin && type ? type : mappedType;
+    const isMasterAdmin = apiUser.email.toLowerCase() === adminEmail.toLowerCase();
+    const finalType: UserType = isMasterAdmin ? 'admin' : mappedType;
 
     if (!isMasterAdmin && type && mappedType !== type) {
       throw new Error('Tipo de usuário inválido para estas credenciais');
@@ -194,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

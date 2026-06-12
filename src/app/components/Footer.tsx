@@ -76,8 +76,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-12 pt-8 text-center text-white/40 text-sm">
-          © {new Date().getFullYear()} SportConnect. Todos os direitos reservados.
+        <div className="border-t border-white/10 mt-12 pt-8 text-center text-white/40 text-sm flex items-center justify-center gap-1">
+          © {new Date().getFullYear()} <Link to="/hub/entrar" className="cursor-text outline-none hover:text-white/40 focus:outline-none">SportConnect</Link>. Todos os direitos reservados.
         </div>
       </div>
     </footer>

@@ -36,6 +36,13 @@ import { VerifyIdentity } from './pages/VerifyIdentity';
 import { ResetPasswordWithVerification } from './pages/ResetPasswordWithVerification';
 import { Cadastro } from './pages/Cadastro';
 import { Placar } from './pages/Placar';
+import { PendingApproval } from './pages/PendingApproval';
+import { HubLayout } from './pages/hub/HubLayout';
+import { HubDashboard } from './pages/hub/HubDashboard';
+import { HubAtletas } from './pages/hub/HubAtletas';
+import { HubArenas } from './pages/hub/HubArenas';
+import { HubProfissionais } from './pages/hub/HubProfissionais';
+import { HubLogin } from './pages/hub/HubLogin';
 
 
 // Simple placeholder pages for institutional sections
@@ -1129,6 +1136,18 @@ export default function App() {
             <Route path="historico" element={<Historico />} />
             <Route path="comissoes" element={<Comissoes />} />
             <Route path="perfil-publico" element={<PerfilPublico />} />
+          </Route>
+          <Route path="/aguardando-aprovacao" element={<PendingApproval />} />
+
+          {/* Login exclusivo do Hub de Controle */}
+          <Route path="/hub/entrar" element={<HubLogin />} />
+
+          {/* Hub de Controle (Admin) */}
+          <Route path="/hub" element={<HubLayout />}>
+            <Route index element={<HubDashboard />} />
+            <Route path="atletas" element={<HubAtletas />} />
+            <Route path="arenas" element={<HubArenas />} />
+            <Route path="profissionais" element={<HubProfissionais />} />
           </Route>
         </Routes>
       </AuthProvider>

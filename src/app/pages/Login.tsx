@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Building2, Users, Trophy, ArrowLeft } from 'lucide-react';
+import { Building2, Users, Trophy, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
@@ -17,7 +17,8 @@ export function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, loginWithGoogle, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,7 +57,12 @@ export function Login() {
           localStorage.removeItem('sportconnect_remember_password');
         }
 
-        navigate(`/dashboard/${selectedType}`);
+        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '';
+        if (email.toLowerCase() === adminEmail.toLowerCase()) {
+          navigate('/hub');
+        } else {
+          navigate(`/dashboard/${selectedType}`);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao autenticar');
       } finally {
@@ -258,15 +264,28 @@ export function Login() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Senha
               </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between mb-8">
