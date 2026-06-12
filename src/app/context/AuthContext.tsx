@@ -28,6 +28,7 @@ interface AuthContextType {
   verifyIdentity: (cpf: string, dataNascimento: string, email: string) => Promise<{ message: string; token: string; userId: number }>;
   resetPasswordWithVerification: (userId: number, newPassword: string) => Promise<{ message: string }>;
   loginWithGoogle: (credential: string, type: UserType) => Promise<any>;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -198,8 +199,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
+  const updateUser = (data: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      // Update in storage as well
+      const storage = localStorage.getItem('sportconnect:user') ? localStorage : sessionStorage;
+      storage.setItem('sportconnect:user', JSON.stringify(updatedUser));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, login, register, logout, forgotPassword, resetPassword, verifyIdentity, resetPasswordWithVerification, loginWithGoogle, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

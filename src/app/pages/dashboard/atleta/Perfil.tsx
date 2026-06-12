@@ -23,7 +23,7 @@ import { formatPhoneNumber } from '../../../hooks/usePhoneMask';
 import { useCityAutocomplete } from '../../../hooks/useCityAutocomplete';
 
 export function Perfil() {
-  const { user, token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('dados');
   const [direction, setDirection] = useState(0);
@@ -56,8 +56,16 @@ export function Perfil() {
     telefone: '',
     localizacao: '',
     avatar: '',
+    banner: '',
     cpf: '',
     dataNascimento: '',
+    esportes: [] as string[],
+    nivel: 'Iniciante',
+    notificacoes: {
+      novosJogos: true,
+      convites: true,
+      promocoes: true
+    }
   });
 
   const {
@@ -71,6 +79,7 @@ export function Perfil() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const cityAutocompleteRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,8 +112,12 @@ export function Perfil() {
           telefone: data.telefone || '',
           localizacao: data.localizacao || '',
           avatar: data.user?.avatar ? `${apiBase}/${data.user.avatar}` : '',
+          banner: data.user?.banner ? `${apiBase}/${data.user.banner}` : '',
           cpf: data.user?.cpf || '',
           dataNascimento: data.user?.dataNascimento ? data.user.dataNascimento.split('T')[0] : '',
+          esportes: data.esportes || [],
+          nivel: data.nivel || 'Iniciante',
+          notificacoes: data.notificacoes || { novosJogos: true, convites: true, promocoes: true }
         });
       })
       .catch(err => console.error('Erro ao carregar perfil:', err));
@@ -150,6 +163,10 @@ export function Perfil() {
     fileInputRef.current?.click();
   };
 
+  const handleBannerClick = () => {
+    bannerInputRef.current?.click();
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -178,6 +195,38 @@ export function Perfil() {
       } catch (error) {
         console.error('Erro ao enviar foto:', error);
         safeToast.error('Erro ao enviar foto. Por favor, tente novamente.');
+      }
+    }
+  };
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formDataUpload = new FormData();
+      formDataUpload.append('banner', file);
+
+      try {
+        const response = await fetch(`${apiBase}/atleta/me`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formDataUpload
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ 
+            ...prev, 
+            banner: data.user?.banner ? `${apiBase}/${data.user.banner}` : prev.banner 
+          }));
+          safeToast.success('Foto de capa atualizada com sucesso!');
+        } else {
+          safeToast.error('Erro ao atualizar foto de capa. Tente novamente.');
+        }
+      } catch (error) {
+        console.error('Erro ao enviar foto de capa:', error);
+        safeToast.error('Erro ao enviar foto de capa. Por favor, tente novamente.');
       }
     }
   };
@@ -254,8 +303,8 @@ export function Perfil() {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Exclude avatar from the update payload as it is handled separately
-      const { avatar, ...dataToUpdate } = formData;
+      // Exclude avatar and banner from the update payload as they are handled separately
+      const { avatar, banner, ...dataToUpdate } = formData;
 
       const response = await fetch(`${apiBase}/atleta/me`, {
         method: 'PUT',
@@ -271,7 +320,7 @@ export function Perfil() {
       }
       
       const data = await response.json();
-      // Optionally update local user context if name/email changed, or show success message
+      updateUser({ name: formData.name, email: formData.email });
       safeToast.success('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error(error);
@@ -304,12 +353,35 @@ export function Perfil() {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-24 md:pb-8">
       {/* Header Profile - Mobile & Desktop */}
-      <div className="bg-white border-b border-gray-100 pt-8 pb-6 px-4 md:px-8">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-6">
+      <div className="bg-white border-b border-gray-100 pb-6">
+        {/* Banner Area */}
+        <div className="h-48 md:h-64 w-full bg-indigo-600 relative group overflow-hidden">
+          {formData.banner ? (
+            <img src={formData.banner} alt="Banner" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+          )}
+          <button 
+            onClick={handleBannerClick}
+            className="absolute top-4 right-4 p-2 bg-black/30 backdrop-blur-sm text-white rounded-full shadow-lg hover:bg-black/50 transition-colors z-10"
+            title="Alterar capa"
+          >
+            <Camera size={20} />
+          </button>
+          <input 
+            type="file" 
+            ref={bannerInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleBannerChange} 
+          />
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-12 md:-mt-16 flex flex-col md:flex-row items-center md:items-end gap-6 relative z-10">
           <div className="relative group">
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
               {formData.avatar ? (
-                <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover bg-white" />
               ) : (
                 <span className="text-3xl md:text-4xl font-bold text-indigo-600">
                   {user?.name?.charAt(0).toUpperCase() || 'A'}
@@ -569,7 +641,18 @@ export function Perfil() {
                         <div className="grid grid-cols-2 gap-3">
                           {['Futebol', 'Vôlei', 'Beach Tennis', 'Futevôlei', 'Tênis', 'Basquete'].map((sport) => (
                             <label key={sport} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
-                              <input type="checkbox" className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" />
+                              <input 
+                                type="checkbox" 
+                                checked={formData.esportes.includes(sport)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData(prev => ({ ...prev, esportes: [...prev.esportes, sport] }));
+                                  } else {
+                                    setFormData(prev => ({ ...prev, esportes: prev.esportes.filter(s => s !== sport) }));
+                                  }
+                                }}
+                                className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" 
+                              />
                               <span className="text-gray-700">{sport}</span>
                             </label>
                           ))}
@@ -578,11 +661,15 @@ export function Perfil() {
 
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Nível Principal</label>
-                        <select className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 transition-all">
-                          <option>Iniciante</option>
-                          <option>Intermediário</option>
-                          <option>Avançado</option>
-                          <option>Profissional</option>
+                        <select 
+                          value={formData.nivel}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nivel: e.target.value }))}
+                          className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 transition-all"
+                        >
+                          <option value="Iniciante">Iniciante</option>
+                          <option value="Intermediário">Intermediário</option>
+                          <option value="Avançado">Avançado</option>
+                          <option value="Profissional">Profissional</option>
                         </select>
                       </div>
                     </div>
@@ -593,9 +680,9 @@ export function Perfil() {
                       <div className="space-y-4">
                         <h3 className="font-medium text-gray-900">Notificações</h3>
                         {[
-                          { label: 'Novos jogos na região', desc: 'Seja avisado quando abrirem jogos perto de você' },
-                          { label: 'Convites de grupos', desc: 'Receba notificações de convites para grupos' },
-                          { label: 'Promoções de arenas', desc: 'Ofertas especiais das suas arenas favoritas' }
+                          { key: 'novosJogos', label: 'Novos jogos na região', desc: 'Seja avisado quando abrirem jogos perto de você' },
+                          { key: 'convites', label: 'Convites de grupos', desc: 'Receba notificações de convites para grupos' },
+                          { key: 'promocoes', label: 'Promoções de arenas', desc: 'Ofertas especiais das suas arenas favoritas' }
                         ].map((item, i) => (
                           <div key={i} className="flex items-start justify-between p-4 rounded-xl bg-gray-50">
                             <div>
@@ -603,7 +690,20 @@ export function Perfil() {
                               <p className="text-sm text-gray-500">{item.desc}</p>
                             </div>
                             <div className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" className="sr-only peer" defaultChecked />
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={formData.notificacoes[item.key as keyof typeof formData.notificacoes]}
+                                onChange={(e) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    notificacoes: {
+                                      ...prev.notificacoes,
+                                      [item.key]: e.target.checked
+                                    }
+                                  }));
+                                }}
+                              />
                               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                             </div>
                           </div>
