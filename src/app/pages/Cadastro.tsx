@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { motion } from 'motion/react';
 import { Users, ArrowLeft, User, Calendar, Eye, EyeOff } from 'lucide-react';
@@ -30,10 +30,12 @@ const ESPECIALIDADES = [
 
 export function Cadastro() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const googleData = location.state?.googleData;
   const urlType = searchParams.get('type') as UserType | null;
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState(googleData?.name || '');
+  const [email, setEmail] = useState(googleData?.email || '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -96,8 +98,13 @@ export function Cadastro() {
       setLoading(true);
       setError('');
       try {
-        await loginWithGoogle(response.credential, type);
-        navigate(`/dashboard/${type}`);
+        const result = await loginWithGoogle(response.credential, type);
+        if (result && result.requireSignup) {
+          setName(result.googleData.name);
+          setEmail(result.googleData.email);
+        } else {
+          navigate(`/dashboard/${type}`);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
       } finally {

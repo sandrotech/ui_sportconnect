@@ -27,7 +27,7 @@ interface AuthContextType {
   resetPassword: (token: string, password: string) => Promise<void>;
   verifyIdentity: (cpf: string, dataNascimento: string, email: string) => Promise<{ message: string; token: string; userId: number }>;
   resetPasswordWithVerification: (userId: number, newPassword: string) => Promise<{ message: string }>;
-  loginWithGoogle: (credential: string, type: UserType) => Promise<void>;
+  loginWithGoogle: (credential: string, type: UserType) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -104,6 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data?.error || 'Falha ao autenticar com o Google');
+    }
+
+    if (data.requireSignup) {
+      return data;
     }
 
     const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole; isComplete?: boolean };

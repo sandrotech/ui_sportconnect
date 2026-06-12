@@ -76,8 +76,12 @@ export function Login() {
       setLoading(true);
       setError('');
       try {
-        await loginWithGoogle(response.credential, selectedType);
-        navigate(`/dashboard/${selectedType}`);
+        const result = await loginWithGoogle(response.credential, selectedType);
+        if (result && result.requireSignup) {
+          navigate(`/cadastro?type=${selectedType}`, { state: { googleData: result.googleData } });
+        } else {
+          navigate(`/dashboard/${selectedType}`);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
       } finally {
