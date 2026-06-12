@@ -111,8 +111,8 @@ export function Perfil() {
           apelido: data.apelido || '',
           telefone: data.telefone || '',
           localizacao: data.localizacao || '',
-          avatar: data.user?.avatar ? `${apiBase}/${data.user.avatar}` : '',
-          banner: data.user?.banner ? `${apiBase}/${data.user.banner}` : '',
+          avatar: data.user?.avatar ? (data.user.avatar.startsWith('http') ? data.user.avatar : `${apiBase}/${data.user.avatar}`) : '',
+          banner: data.user?.banner ? (data.user.banner.startsWith('http') ? data.user.banner : `${apiBase}/${data.user.banner}`) : '',
           cpf: data.user?.cpf || '',
           dataNascimento: data.user?.dataNascimento ? data.user.dataNascimento.split('T')[0] : '',
           esportes: data.esportes || [],
@@ -355,11 +355,11 @@ export function Perfil() {
       {/* Header Profile - Mobile & Desktop */}
       <div className="bg-white border-b border-gray-100 pb-6">
         {/* Banner Area */}
-        <div className="h-48 md:h-64 w-full bg-indigo-600 relative group overflow-hidden">
+        <div className="h-48 md:h-64 w-full bg-[#000273] relative group overflow-hidden">
           {formData.banner ? (
             <img src={formData.banner} alt="Banner" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            <img src="/logo/horizontal/png_com_fundo/8.png" alt="Banner Padrão" className="w-full h-full object-cover opacity-90" />
           )}
           <button 
             onClick={handleBannerClick}
