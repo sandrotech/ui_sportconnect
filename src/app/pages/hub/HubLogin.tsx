@@ -13,7 +13,7 @@ export function HubLogin() {
   const [loading, setLoading] = useState(false);
   const { login, user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '';
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@sportconnect.com';
 
   // Se já estiver logado como admin, vai direto pro hub
   useEffect(() => {
