@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Maximize, Minimize, RotateCcw, ArrowLeftRight, X, Smartphone } from 'lucide-react';
+import { Maximize, Minimize, RotateCcw, ArrowLeftRight, X, Smartphone, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +9,17 @@ export function Placar() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [swapped, setSwapped] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
+  const [fontScale, setFontScale] = useState(1.2); // Default slightly larger
+
+  const increaseSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFontScale(prev => Math.min(prev + 0.2, 3));
+  };
+
+  const decreaseSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFontScale(prev => Math.max(prev - 0.2, 0.5));
+  };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -57,39 +68,36 @@ export function Placar() {
 
   return (
     <div className="h-screen w-screen flex flex-col font-sans overflow-hidden bg-[#1a1a1a] text-white">
-      {/* Top Bar */}
-      <div className="h-14 bg-[#111] flex items-center justify-between px-4 z-10 shrink-0">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 group hover:opacity-80 transition">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center">
-              <span className="font-bold text-lg text-white">S</span>
-            </div>
-            <span className="font-bold hidden sm:inline-block">SportConnect</span>
+      {/* Floating Controls */}
+      <div 
+        className="absolute top-4 right-4 z-50 flex items-center bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-xl p-1 transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!isFullscreen && (
+          <Link to="/" className="p-3 rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center" title="Sair do Placar">
+            <X className="w-6 h-6 text-white" />
           </Link>
-          <span className="text-gray-400 font-medium">Placar Digital</span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {!isFullscreen && (
-            <Link to="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors mr-2 flex items-center justify-center" title="Sair">
-              <X className="w-5 h-5 text-gray-300" />
-            </Link>
-          )}
-          <div className="flex bg-white/10 rounded-lg p-1">
-            <button onClick={() => setIsRotated(!isRotated)} className="p-2 hover:bg-white/20 rounded transition-colors" title="Girar Tela (Para Celular)">
-              <Smartphone className="w-5 h-5" />
-            </button>
-            <button onClick={toggleFullscreen} className="p-2 hover:bg-white/20 rounded transition-colors" title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}>
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-            </button>
-            <button onClick={resetScores} className="p-2 hover:bg-white/20 rounded transition-colors" title="Zerar Placar">
-              <RotateCcw className="w-5 h-5" />
-            </button>
-            <button onClick={swapSides} className="p-2 hover:bg-white/20 rounded transition-colors" title="Inverter Lados">
-              <ArrowLeftRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        )}
+        <div className="w-px h-6 bg-white/20 mx-1 hidden sm:block"></div>
+        <button onClick={decreaseSize} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title="Diminuir Tamanho">
+          <ZoomOut className="w-6 h-6" />
+        </button>
+        <button onClick={increaseSize} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title="Aumentar Tamanho">
+          <ZoomIn className="w-6 h-6" />
+        </button>
+        <div className="w-px h-6 bg-white/20 mx-1"></div>
+        <button onClick={() => setIsRotated(!isRotated)} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title="Girar Tela (Para Celular)">
+          <Smartphone className="w-6 h-6" />
+        </button>
+        <button onClick={swapSides} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title="Inverter Lados">
+          <ArrowLeftRight className="w-6 h-6" />
+        </button>
+        <button onClick={resetScores} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title="Zerar Placar">
+          <RotateCcw className="w-6 h-6" />
+        </button>
+        <button onClick={toggleFullscreen} className="p-3 hover:bg-white/20 rounded-lg transition-colors" title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}>
+          {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+        </button>
       </div>
 
       {/* Main Score Area */}
@@ -105,9 +113,10 @@ export function Placar() {
             
             <motion.div 
               key={teamLeft.score}
-              initial={{ scale: 0.8, opacity: 0.5 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-[25vh] md:text-[40vh] font-bold leading-none tabular-nums"
+              initial={{ scale: fontScale * 0.8, opacity: 0.5 }}
+              animate={{ scale: fontScale, opacity: 1 }}
+              className="font-bold leading-none tabular-nums"
+              style={{ fontSize: 'min(40vh, 30vw)' }}
             >
               {teamLeft.score}
             </motion.div>
@@ -131,9 +140,10 @@ export function Placar() {
             
             <motion.div 
               key={teamRight.score}
-              initial={{ scale: 0.8, opacity: 0.5 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-[25vh] md:text-[40vh] font-bold leading-none tabular-nums"
+              initial={{ scale: fontScale * 0.8, opacity: 0.5 }}
+              animate={{ scale: fontScale, opacity: 1 }}
+              className="font-bold leading-none tabular-nums"
+              style={{ fontSize: 'min(40vh, 30vw)' }}
             >
               {teamRight.score}
             </motion.div>
