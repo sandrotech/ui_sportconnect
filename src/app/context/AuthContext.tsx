@@ -33,28 +33,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('sportconnect:user') || sessionStorage.getItem('sportconnect:user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser) as User;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('sportconnect:token') || sessionStorage.getItem('sportconnect:token');
+  });
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '';
   const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
   const isAdmin = !!user && user.email.toLowerCase() === adminEmail.toLowerCase();
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('sportconnect:user') || sessionStorage.getItem('sportconnect:user');
-    const storedToken = localStorage.getItem('sportconnect:token') || sessionStorage.getItem('sportconnect:token');
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser) as User);
-        setToken(storedToken);
-      } catch {
-        localStorage.removeItem('sportconnect:user');
-        localStorage.removeItem('sportconnect:token');
-        sessionStorage.removeItem('sportconnect:user');
-        sessionStorage.removeItem('sportconnect:token');
-      }
-    }
-  }, []);
 
   const login = async (email: string, password: string, type: UserType, remember: boolean = false) => {
     const response = await fetch(`${apiBase}/auth/login`, {
