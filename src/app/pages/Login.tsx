@@ -79,6 +79,8 @@ export function Login() {
         const result = await loginWithGoogle(response.credential, selectedType);
         if (result && result.requireSignup) {
           navigate(`/cadastro?type=${selectedType}`, { state: { googleData: result.googleData } });
+        } else if (result && result.isComplete === false) {
+          navigate(`/cadastro?type=${result.type}`, { state: { googleData: { email: result.email, name: result.name } } });
         } else {
           const userType = result?.type || selectedType;
           navigate(`/dashboard/${userType}`);

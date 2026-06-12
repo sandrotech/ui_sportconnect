@@ -886,8 +886,16 @@ function Contato() {
 function ProtectedRoute({ children, requiredType }: { children: React.ReactNode; requiredType: string }) {
   const { user } = useAuth();
 
-  if (!user || user.type !== requiredType) {
+  if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.type !== requiredType) {
+    return <Navigate to={`/dashboard/${user.type}`} replace />;
+  }
+
+  if (user.isComplete === false) {
+    return <Navigate to={`/cadastro?type=${user.type}`} replace />;
   }
 
   return <>{children}</>;

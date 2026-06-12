@@ -102,9 +102,22 @@ export function Cadastro() {
         if (result && result.requireSignup) {
           setName(result.googleData.name);
           setEmail(result.googleData.email);
+        } else if (result && result.isComplete === false) {
+          setName(result.name);
+          setEmail(result.email);
+          if (result.type !== type) {
+            setError(`Sua conta Google está cadastrada como ${result.type.toUpperCase()}, mas você está tentando se cadastrar como ${type.toUpperCase()}.`);
+          }
         } else {
           const userType = result?.type || type;
-          navigate(`/dashboard/${userType}`);
+          if (userType !== type) {
+            setError(`Sua conta Google já está cadastrada como ${userType.toUpperCase()}. Redirecionando...`);
+            setTimeout(() => {
+              navigate(`/dashboard/${userType}`);
+            }, 2000);
+          } else {
+            navigate(`/dashboard/${userType}`);
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
