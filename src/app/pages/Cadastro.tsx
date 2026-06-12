@@ -211,9 +211,14 @@ export function Cadastro() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${
+                    googleData
+                      ? 'bg-gray-100/80 text-gray-400 border-gray-200 cursor-not-allowed select-none'
+                      : 'border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent'
+                  }`}
                   placeholder="seu@email.com"
                   required
+                  disabled={!!googleData}
                 />
               </div>
             </div>

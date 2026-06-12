@@ -186,7 +186,9 @@ export function Perfil() {
           const data = await response.json();
           setFormData(prev => ({ 
             ...prev, 
-            avatar: data.user?.avatar ? `${apiBase}/${data.user.avatar}` : prev.avatar 
+            avatar: data.user?.avatar 
+              ? (data.user.avatar.startsWith('http') ? data.user.avatar : `${apiBase}/${data.user.avatar}`) 
+              : prev.avatar 
           }));
           safeToast.success('Foto de perfil atualizada com sucesso!');
         } else {
@@ -218,7 +220,9 @@ export function Perfil() {
           const data = await response.json();
           setFormData(prev => ({ 
             ...prev, 
-            banner: data.user?.banner ? `${apiBase}/${data.user.banner}` : prev.banner 
+            banner: data.user?.banner 
+              ? (data.user.banner.startsWith('http') ? data.user.banner : `${apiBase}/${data.user.banner}`) 
+              : prev.banner 
           }));
           safeToast.success('Foto de capa atualizada com sucesso!');
         } else {
@@ -513,7 +517,8 @@ export function Perfil() {
                               name="email"
                               value={formData.email}
                               onChange={handleInputChange}
-                              className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500/20 text-gray-900 placeholder-gray-400 transition-all"
+                              className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-100/80 border-none text-gray-400 cursor-not-allowed transition-all select-none"
+                              disabled
                             />
                           </div>
                         </div>

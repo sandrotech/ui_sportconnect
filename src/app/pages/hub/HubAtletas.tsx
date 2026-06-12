@@ -75,7 +75,7 @@ export function HubAtletas() {
       render: (row: any) => (
         <div className="flex items-center gap-3">
           {row.user?.avatar ? (
-            <img src={`${import.meta.env.VITE_API_URL}/${row.user.avatar}`} className="w-7 h-7 rounded-full object-cover shadow-sm border border-gray-100" />
+            <img src={row.user.avatar.startsWith('http') ? row.user.avatar : `${import.meta.env.VITE_API_URL}/${row.user.avatar}`} className="w-7 h-7 rounded-full object-cover shadow-sm border border-gray-100" />
           ) : (
             <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-[#004ef9] text-xs font-bold">
               {row.user?.name?.[0]?.toUpperCase()}
