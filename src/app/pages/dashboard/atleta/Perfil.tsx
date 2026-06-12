@@ -381,33 +381,35 @@ export function Perfil() {
           />
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-12 md:-mt-16 flex flex-col md:flex-row items-center md:items-end gap-6 relative z-10">
-          <div className="relative group">
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
-              {formData.avatar ? (
-                <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover bg-white" />
-              ) : (
-                <span className="text-3xl md:text-4xl font-bold text-indigo-600">
-                  {user?.name?.charAt(0).toUpperCase() || 'A'}
-                </span>
-              )}
+        <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
+          <div className="-mt-12 md:-mt-16 mb-4 flex justify-center md:justify-start">
+            <div className="relative group">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                {formData.avatar ? (
+                  <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover bg-white" />
+                ) : (
+                  <span className="text-3xl md:text-4xl font-bold text-indigo-600">
+                    {user?.name?.charAt(0).toUpperCase() || 'A'}
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={handleAvatarClick}
+                className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Camera size={18} />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileChange} 
+              />
             </div>
-            <button 
-              onClick={handleAvatarClick}
-              className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
-            >
-              <Camera size={18} />
-            </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*"
-              onChange={handleFileChange} 
-            />
           </div>
           
-          <div className="text-center md:text-left flex-1">
+          <div className="text-center md:text-left">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{user?.name || 'Atleta'}</h1>
             <p className="text-gray-500 mt-1 flex items-center justify-center md:justify-start gap-2">
               <Mail size={16} /> {user?.email}
