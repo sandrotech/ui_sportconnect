@@ -80,7 +80,8 @@ export function Login() {
         if (result && result.requireSignup) {
           navigate(`/cadastro?type=${selectedType}`, { state: { googleData: result.googleData } });
         } else {
-          navigate(`/dashboard/${selectedType}`);
+          const userType = result?.type || selectedType;
+          navigate(`/dashboard/${userType}`);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');

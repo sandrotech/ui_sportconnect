@@ -126,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem('sportconnect:user', JSON.stringify(nextUser));
     localStorage.setItem('sportconnect:token', data.token);
+    return nextUser;
   };
 
   const register = async (data: RegisterData) => {

@@ -103,7 +103,8 @@ export function Cadastro() {
           setName(result.googleData.name);
           setEmail(result.googleData.email);
         } else {
-          navigate(`/dashboard/${type}`);
+          const userType = result?.type || type;
+          navigate(`/dashboard/${userType}`);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Falha ao logar com o Google');
