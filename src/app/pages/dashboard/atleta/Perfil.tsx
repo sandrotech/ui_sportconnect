@@ -28,6 +28,7 @@ export function Perfil() {
   const [activeTab, setActiveTab] = useState('dados');
   const [direction, setDirection] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
@@ -157,6 +158,49 @@ export function Perfil() {
   const handleCitySelect = (city: string) => {
     setFormData(prev => ({ ...prev, localizacao: city }));
     setShowSuggestions(false);
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      safeToast.error('Geolocalização não é suportada pelo seu navegador.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          const data = await response.json();
+          
+          let cityName = '';
+          if (data.address) {
+            cityName = data.address.city || data.address.town || data.address.village || data.address.municipality || '';
+            const state = data.address.state || '';
+            
+            if (cityName) {
+              const fullLocation = state ? `${cityName}, ${state}` : cityName;
+              setFormData(prev => ({ ...prev, localizacao: fullLocation }));
+              safeToast.success('Localização detectada com sucesso!');
+            } else {
+              safeToast.error('Não foi possível identificar a cidade.');
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar localização:', error);
+          safeToast.error('Erro ao buscar a cidade.');
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error('Erro de geolocalização:', error);
+        safeToast.error('Não foi possível obter sua localização. Verifique as permissões.');
+        setIsLocating(false);
+      },
+      { timeout: 10000 }
+    );
   };
 
   const handleAvatarClick = () => {
@@ -418,7 +462,7 @@ export function Perfil() {
                   Atleta Amador
                 </span>
                 <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-100">
-                  Nível Intermediário
+                  Nível {formData.nivel || 'Iniciante'}
                 </span>
               </div>
             </div>
@@ -572,7 +616,27 @@ export function Perfil() {
                         </div>
                         
                         <div className="space-y-2 md:col-span-2">
-                          <label className="text-sm font-medium text-gray-700">Localização</label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-gray-700">Localização</label>
+                            <button
+                              type="button"
+                              onClick={handleGetLocation}
+                              disabled={isLocating}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium transition-colors"
+                            >
+                              {isLocating ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                  Buscando...
+                                </>
+                              ) : (
+                                <>
+                                  <MapPin size={12} />
+                                  Usar minha localização atual
+                                </>
+                              )}
+                            </button>
+                          </div>
                           <div className="relative" ref={cityAutocompleteRef}>
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                             <input 
