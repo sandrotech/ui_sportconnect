@@ -61,6 +61,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   const showFeedback = (type: 'success' | 'error', msg: string) => {
@@ -78,6 +79,34 @@ export function GroupDetail({ groupId, onBack }: Props) {
   };
 
   useEffect(() => { fetchGroup(); }, [groupId]);
+
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      const res = await fetch(`${API()}/groups/${groupId}/photo`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('sportconnect:token')}`,
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showFeedback('success', 'Capa do grupo atualizada!');
+      fetchGroup();
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao atualizar capa.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const myMembership = group?.members.find((m) => m.user.id === user?.id && m.status === 'APPROVED');
   const myRole = myMembership?.role || null;
@@ -200,25 +229,50 @@ export function GroupDetail({ groupId, onBack }: Props) {
         }`}>{feedback.msg}</div>
       )}
 
-      {/* Back + Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-gray-600 text-lg">
+      {/* Hero Banner */}
+      <div className="relative w-full h-48 sm:h-56 rounded-3xl overflow-hidden shadow-sm group">
+        {group.photo ? (
+          <img src={group.photo} alt={group.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-tr from-[#000273] to-[#004ef9] flex items-center justify-center">
+            <span className="text-6xl opacity-30">🏆</span>
+          </div>
+        )}
+        
+        {/* Overlay gradient for readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+
+        {/* Back button overlay */}
+        <button onClick={onBack} className="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition-all z-10">
           ←
         </button>
-        <div className="flex-1 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9]/10 to-[#ff4b00]/10 flex items-center justify-center text-xl border border-black/5">
-            {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover rounded-xl" /> : '🏆'}
-          </div>
-          <div>
-            <h2 className="font-bold text-[#000273] text-lg leading-tight">{group.name}</h2>
-            <p className="text-sm text-gray-500">{group.sport} · {group.city} · {approvedMembers.length}/{group.maxMembers} membros</p>
-          </div>
-        </div>
-        {myRole && (
-          <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#004ef9]/10 text-[#004ef9]">
-            {ROLE_LABELS[myRole]?.badge} {ROLE_LABELS[myRole]?.label}
-          </span>
+
+        {/* Edit Photo Button */}
+        {isAdmin && (
+          <label className={`absolute top-4 right-4 bg-black/40 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-black/60 transition-all z-10 flex items-center gap-2 ${uploadingPhoto ? 'opacity-100 cursor-wait' : 'opacity-0 group-hover:opacity-100'}`}>
+            {uploadingPhoto ? 'Enviando...' : '📸 Alterar Capa'}
+            <input type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} disabled={uploadingPhoto} />
+          </label>
         )}
+
+        {/* Group Info Overlay */}
+        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between z-10">
+          <div className="text-white">
+            <h2 className="font-bold text-2xl mb-1">{group.name}</h2>
+            <p className="text-white/80 text-sm font-medium flex items-center gap-2">
+              <span>{group.sport}</span>
+              <span className="w-1 h-1 rounded-full bg-white/50" />
+              <span>{group.city}</span>
+              <span className="w-1 h-1 rounded-full bg-white/50" />
+              <span>{approvedMembers.length}/{group.maxMembers} membros</span>
+            </p>
+          </div>
+          {myRole && (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/20 backdrop-blur-md text-white border border-white/20">
+              {ROLE_LABELS[myRole]?.badge} {ROLE_LABELS[myRole]?.label}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Pending requests badge */}

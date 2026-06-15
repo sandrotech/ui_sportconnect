@@ -172,58 +172,56 @@ export function GameSessionList({ groupId, currentUserId, canManage, onCreateSes
           const timeStr = sessionDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
           return (
-            <div key={session.id} className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+            <div key={session.id} className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden transition-all duration-300 hover:shadow-md">
               {/* Card header */}
               <button
                 onClick={() => setExpandedId(isExpanded ? null : session.id)}
-                className="w-full p-5 text-left hover:bg-gray-50/50 transition-colors"
+                className="w-full text-left relative group transition-all"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{session.title}</h4>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusCfg.color}`}>
-                        {statusCfg.label}
-                      </span>
+                {/* Visual border indicating status */}
+                <div className={`absolute left-0 top-0 bottom-0 w-2 ${statusCfg.color.split(' ')[0]} transition-colors`} />
+                <div className="p-5 pl-7 bg-white hover:bg-gray-50/80 transition-colors">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${statusCfg.color}`}>
+                          {statusCfg.label}
+                        </span>
+                        <span className="text-gray-400 text-sm font-medium flex items-center gap-1">
+                          📅 {dateStr}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-xl text-gray-900 mb-2">{session.title}</h4>
+                      
+                      <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl text-gray-700 font-medium border border-gray-100">
+                          <span className="text-base">📍</span>
+                          <span>{session.arena?.nomeArena || 'Local a definir'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl text-amber-700 font-medium border border-amber-100/50">
+                          <span className="text-base">🎫</span>
+                          <span>{session.fichasPerPlayer} ficha(s)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl text-blue-700 font-medium border border-blue-100/50">
+                          <span className="text-base">⏰</span>
+                          <span>{timeStr}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                      <span>📅 {dateStr} às {timeStr}</span>
-                      {session.arena && <span>📍 {session.arena.nomeArena}</span>}
-                      <span>🎫 {session.fichasPerPlayer} ficha(s)</span>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-medium text-gray-800">
-                      {starters.length}/{session.maxStarters} titulares
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {reserves.length}/{session.maxReserves} reservas
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bars */}
-                <div className="mt-3 space-y-1.5">
-                  <div>
-                    <div className="flex justify-between text-xs text-gray-500 mb-0.5">
-                      <span>Titulares</span><span>{starters.length}/{session.maxStarters}</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#004ef9] to-[#0066ff] rounded-full transition-all"
-                        style={{ width: `${Math.min(100, (starters.length / session.maxStarters) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs text-gray-400 mb-0.5">
-                      <span>Reservas</span><span>{reserves.length}/{session.maxReserves}</span>
-                    </div>
-                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-400 rounded-full transition-all"
-                        style={{ width: `${Math.min(100, (reserves.length / session.maxReserves) * 100)}%` }}
-                      />
+                    
+                    <div className="sm:text-right flex items-center sm:items-end sm:flex-col justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6 mt-4 sm:mt-0 min-w-[140px]">
+                      <div className="text-center sm:text-right">
+                        <div className="text-3xl font-black text-[#000273] leading-none">
+                          {starters.length}<span className="text-lg text-gray-400 font-medium">/{session.maxStarters}</span>
+                        </div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Titulares</div>
+                      </div>
+                      <div className="text-center sm:text-right mt-0 sm:mt-4">
+                         <div className="text-xl font-bold text-gray-600 leading-none">
+                          {reserves.length}<span className="text-base text-gray-400 font-medium">/{session.maxReserves}</span>
+                        </div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Reservas</div>
+                      </div>
                     </div>
                   </div>
                 </div>
