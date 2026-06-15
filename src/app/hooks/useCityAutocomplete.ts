@@ -17,9 +17,12 @@ interface UseCityAutocompleteProps {
   debounceMs?: number;
 }
 
+let cachedCities: City[] | null = null;
+let isFetching = false;
+
 /**
  * Hook customizado para autocomplete de cidades brasileiras
- * Usa a BrasilAPI para buscar cidades por nome
+ * Usa a API do IBGE para buscar cidades por nome
  */
 export const useCityAutocomplete = ({
   minLength = 2,
@@ -43,17 +46,24 @@ export const useCityAutocomplete = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://brasilapi.com.br/api/ibge/municipios/v1?providers=dados-abertos-br,gov,wikipedia`
-      );
+      if (!cachedCities && !isFetching) {
+        isFetching = true;
+        const response = await fetch(
+          `https://servicodados.ibge.gov.br/api/v1/localidades/municipios`
+        );
 
-      if (!response.ok) {
-        throw new Error('Erro ao buscar cidades');
+        if (!response.ok) {
+          throw new Error('Erro ao buscar cidades');
+        }
+        cachedCities = await response.json();
+        isFetching = false;
+      }
+      
+      while (!cachedCities && isFetching) {
+        await new Promise(r => setTimeout(r, 100));
       }
 
-      const data: City[] = await response.json();
-      
-      const filteredCities = data
+      const filteredCities = (cachedCities || [])
         .filter((city: City) => 
           city.nome.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -66,6 +76,7 @@ export const useCityAutocomplete = ({
       setError('Erro ao carregar cidades');
       setCities([]);
       setShowSuggestions(false);
+      isFetching = false;
     } finally {
       setIsLoading(false);
     }

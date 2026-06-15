@@ -77,7 +77,7 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-hide">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-3xl px-6 pt-6 pb-4 border-b border-gray-100 z-10">
           <div className="flex items-center justify-between">
@@ -251,7 +251,7 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="sticky bottom-0 left-0 right-0 bg-white pt-4 pb-1 border-t border-gray-100 mt-2 z-10 flex gap-3">
             <button
               type="button"
               onClick={onClose}
