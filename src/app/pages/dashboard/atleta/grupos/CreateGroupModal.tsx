@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapPin } from 'lucide-react';
+import { useCityAutocomplete } from '../../../../hooks/useCityAutocomplete';
 
 const API = () => (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const authHeaders = () => ({
@@ -27,6 +29,27 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const {
+    cities,
+    isLoading: isLoadingCities,
+    error: cityError,
+    showSuggestions: showCitySuggestions,
+    searchCities,
+    setShowSuggestions
+  } = useCityAutocomplete();
+
+  const cityAutocompleteRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cityAutocompleteRef.current && !cityAutocompleteRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setShowSuggestions]);
+
   const set = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +77,7 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-3xl px-6 pt-6 pb-4 border-b border-gray-100 z-10">
           <div className="flex items-center justify-between">
@@ -116,15 +139,64 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
 
           {/* Cidade + Máximo */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="relative" ref={cityAutocompleteRef}>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Cidade *</label>
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) => set('city', e.target.value)}
-                placeholder="Ex: São Paulo"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#004ef9]/30"
-              />
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={form.city}
+                  onChange={(e) => {
+                    set('city', e.target.value);
+                    searchCities(e.target.value);
+                  }}
+                  placeholder="Ex: Fortaleza, CE"
+                  className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#004ef9]/30"
+                />
+                {form.city && (
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => {
+                      set('city', '');
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              
+              {showCitySuggestions && (
+                <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto scrollbar-hide">
+                  {isLoadingCities ? (
+                    <div className="px-4 py-3 text-gray-500 text-sm flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+                      Buscando cidades...
+                    </div>
+                  ) : cityError ? (
+                    <div className="px-4 py-3 text-red-500 text-sm">{cityError}</div>
+                  ) : cities.length > 0 ? (
+                    cities.map((city, index) => (
+                      <button
+                        type="button"
+                        key={index}
+                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 text-gray-700 transition-colors border-b border-gray-50 last:border-b-0 text-sm"
+                        onClick={() => {
+                          set('city', city);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        {city}
+                      </button>
+                    ))
+                  ) : form.city.length >= 2 ? (
+                    <div className="px-4 py-3 text-gray-500 text-sm">Nenhuma cidade encontrada.</div>
+                  ) : null}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Máx. de membros</label>
