@@ -95,7 +95,7 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-6 py-5 space-y-5 overflow-y-auto scrollbar-hide flex-1">
+          <div className="px-6 py-5 space-y-5 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1">
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
                 {error}
@@ -171,7 +171,7 @@ export function CreateGroupModal({ onCreated, onClose }: Props) {
                 </div>
                 
                 {showCitySuggestions && (
-                  <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto scrollbar-hide">
+                  <div className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {isLoadingCities ? (
                       <div className="px-4 py-3 text-gray-500 text-sm flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
