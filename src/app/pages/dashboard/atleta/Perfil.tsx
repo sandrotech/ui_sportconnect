@@ -382,8 +382,8 @@ export function Perfil() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
-          <div className="-mt-12 md:-mt-16 mb-4 flex justify-center md:justify-start">
-            <div className="relative group">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6 mb-6">
+            <div className="relative group shrink-0 -mt-12 md:-mt-16 mx-auto md:mx-0">
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
                 {formData.avatar ? (
                   <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover bg-white" />
@@ -407,20 +407,20 @@ export function Perfil() {
                 onChange={handleFileChange} 
               />
             </div>
-          </div>
-          
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{user?.name || 'Atleta'}</h1>
-            <p className="text-gray-500 mt-1 flex items-center justify-center md:justify-start gap-2">
-              <Mail size={16} /> {user?.email}
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-3">
-              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium border border-blue-100">
-                Atleta Amador
-              </span>
-              <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-100">
-                Nível Intermediário
-              </span>
+            
+            <div className="text-center md:text-left flex-1 pb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{user?.name || 'Atleta'}</h1>
+              <p className="text-gray-500 mt-1 flex items-center justify-center md:justify-start gap-2">
+                <Mail size={16} /> {user?.email}
+              </p>
+              <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-3">
+                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium border border-blue-100">
+                  Atleta Amador
+                </span>
+                <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-100">
+                  Nível Intermediário
+                </span>
+              </div>
             </div>
           </div>
         </div>
