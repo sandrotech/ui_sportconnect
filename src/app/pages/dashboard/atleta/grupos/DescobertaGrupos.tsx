@@ -177,7 +177,7 @@ export function DescobertaGrupos({ onSelectGroup }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {groups.map((group) => {
             const sportIcon = SPORTS_ICONS[group.sport] || SPORTS_ICONS.default;
-            const approvedCount = group.members?.filter((m) => m.status === 'APPROVED').length ?? 0;
+            const approvedCount = (group.members || []).filter((m) => m.status === 'APPROVED').length;
             const isFull = approvedCount >= group.maxMembers;
             const requested = requestedIds.has(group.id);
 

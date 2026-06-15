@@ -51,7 +51,7 @@ export function MeusGrupos({ onSelectGroup }: Props) {
   useEffect(() => {
     fetch(`${API()}/groups/mine/list`, { headers: authHeaders() })
       .then((r) => r.json())
-      .then(setGroups)
+      .then((data) => setGroups(Array.isArray(data) ? data : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -83,7 +83,7 @@ export function MeusGrupos({ onSelectGroup }: Props) {
       {groups.map((group) => {
         const vis = VISIBILITY_CONFIG[group.visibility];
         const sportIcon = SPORTS_ICONS[group.sport] || SPORTS_ICONS.default;
-        const approvedCount = group.members?.filter((m) => m.status === 'APPROVED').length ?? 0;
+        const approvedCount = (group.members || []).filter((m) => m.status === 'APPROVED').length;
 
         return (
           <button
