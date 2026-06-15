@@ -5,7 +5,7 @@ import { CreateGameSession } from './CreateGameSession';
 
 const API = () => (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('token')}`,
+  Authorization: `Bearer ${localStorage.getItem('sportconnect:token')}`,
   'Content-Type': 'application/json',
 });
 
