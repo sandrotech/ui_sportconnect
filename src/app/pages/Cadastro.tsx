@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { motion } from 'motion/react';
-import { Users, ArrowLeft, User, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Users, ArrowLeft, User, Calendar, Eye, EyeOff, MapPin, Phone, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/ui/Logo';
 import {
@@ -47,9 +47,13 @@ export function Cadastro() {
   const [nomeArena, setNomeArena] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [razaoSocial, setRazaoSocial] = useState('');
+  const [cep, setCep] = useState('');
   const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
   const [estado, setEstado] = useState('');
   const [endereco, setEndereco] = useState('');
+  const [numero, setNumero] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [logo, setLogo] = useState<File | null>(null);
   const [especialidade, setEspecialidade] = useState('');
   const [valorHora, setValorHora] = useState('');
@@ -58,7 +62,6 @@ export function Cadastro() {
   const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  // Função para formatar CPF
   const formatCPF = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
@@ -73,6 +76,46 @@ export function Cadastro() {
     setCpf(formatted);
   };
 
+  const formatPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{4,5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return value;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
+    const masked = formatPhoneNumber(digitsOnly);
+    setTelefone(masked);
+  };
+
+  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+    let formattedCep = value;
+    if (value.length > 5) {
+      formattedCep = value.replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+    setCep(formattedCep);
+
+    if (value.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
+        const data = await response.json();
+        if (!data.erro) {
+          setEndereco(data.logradouro || '');
+          setBairro(data.bairro || '');
+          setCidade(data.localidade || '');
+          setEstado(data.uf || '');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
@@ -84,7 +127,7 @@ export function Cadastro() {
     setLoading(true);
     try {
       if (type === 'arena') {
-        await register({ type, email, password, nomeArena, cnpj, razaoSocial, bairro, estado, endereco, logo });
+        await register({ type, email, password, nomeArena, cnpj, razaoSocial, cep, endereco, numero, bairro, cidade, estado, telefone, logo });
       } else if (type === 'atleta') {
         await register({ type, name, email, password, cpf, dataNascimento, apelido });
       } else {
@@ -345,13 +388,37 @@ export function Cadastro() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                    <input type="text" value={estado} onChange={(e) => setEstado(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">CEP</label>
+                    <input type="text" value={cep} onChange={handleCepChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" placeholder="00000-000" required />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
-                    <input type="text" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                    <input type="text" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" placeholder="Rua, Avenida..." required />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Número / Complemento</label>
+                    <input type="text" value={numero} onChange={(e) => setNumero(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" placeholder="Número" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bairro</label>
+                    <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                    <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                    <input type="text" value={estado} onChange={(e) => setEstado(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" placeholder="UF" required />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                  <input type="text" value={telefone} onChange={handlePhoneChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" placeholder="(00) 00000-0000" required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Logo (opcional)</label>

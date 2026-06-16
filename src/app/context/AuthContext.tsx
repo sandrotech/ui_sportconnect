@@ -13,7 +13,7 @@ interface User {
 }
 
 type RegisterData =
-  | { type: 'arena'; email: string; password: string; nomeArena: string; cnpj: string; razaoSocial: string; bairro: string; estado: string; endereco: string; logo?: File | null }
+  | { type: 'arena'; email: string; password: string; nomeArena: string; cnpj: string; razaoSocial: string; cep: string; endereco: string; numero: string; bairro: string; cidade: string; estado: string; telefone: string; logo?: File | null }
   | { type: 'atleta'; name: string; email: string; password: string; cpf: string; dataNascimento: string; apelido: string }
   | { type: 'profissional'; name: string; email: string; password: string; cpf: string; dataNascimento: string; especialidade: string; valorHora: number };
 
@@ -138,9 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       formData.append('nomeArena', data.nomeArena);
       formData.append('cnpj', data.cnpj);
       formData.append('razaoSocial', data.razaoSocial);
-      formData.append('bairro', data.bairro);
-      formData.append('estado', data.estado);
+      formData.append('cep', data.cep);
       formData.append('endereco', data.endereco);
+      formData.append('numero', data.numero);
+      formData.append('bairro', data.bairro);
+      formData.append('cidade', data.cidade);
+      formData.append('estado', data.estado);
+      formData.append('telefone', data.telefone);
       if (data.logo) {
         formData.append('logo', data.logo);
       }
