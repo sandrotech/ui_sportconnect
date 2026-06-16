@@ -46,6 +46,11 @@ export function Cadastro() {
   const [apelido, setApelido] = useState('');
   const [nomeArena, setNomeArena] = useState('');
   const [cnpj, setCnpj] = useState('');
+  const [razaoSocial, setRazaoSocial] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [estado, setEstado] = useState('');
+  const [endereco, setEndereco] = useState('');
+  const [logo, setLogo] = useState<File | null>(null);
   const [especialidade, setEspecialidade] = useState('');
   const [valorHora, setValorHora] = useState('');
   const [error, setError] = useState('');
@@ -79,7 +84,7 @@ export function Cadastro() {
     setLoading(true);
     try {
       if (type === 'arena') {
-        await register({ type, name, email, password, nomeArena, cnpj });
+        await register({ type, email, password, nomeArena, cnpj, razaoSocial, bairro, estado, endereco, logo });
       } else if (type === 'atleta') {
         await register({ type, name, email, password, cpf, dataNascimento, apelido });
       } else {
@@ -194,18 +199,20 @@ export function Cadastro() {
 
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                  placeholder="Seu nome"
-                  required
-                />
-              </div>
-              <div>
+              {type !== 'arena' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    placeholder="Seu nome"
+                    required
+                  />
+                </div>
+              )}
+              <div className={type === 'arena' ? 'sm:col-span-2' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
                 <input
                   type="email"
@@ -302,27 +309,53 @@ export function Cadastro() {
 
             {type === 'arena' ? (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nome da arena</label>
-                  <input
-                    type="text"
-                    value={nomeArena}
-                    onChange={(e) => setNomeArena(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                    placeholder="Arena Central"
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome da arena</label>
+                    <input
+                      type="text"
+                      value={nomeArena}
+                      onChange={(e) => setNomeArena(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                      placeholder="Arena Central"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
+                    <input
+                      type="text"
+                      value={cnpj}
+                      onChange={(e) => setCnpj(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                      placeholder="00.000.000/0001-00"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Razão Social</label>
+                    <input type="text" value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bairro</label>
+                    <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                    <input type="text" value={estado} onChange={(e) => setEstado(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                    <input type="text" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" required />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ</label>
-                  <input
-                    type="text"
-                    value={cnpj}
-                    onChange={(e) => setCnpj(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
-                    placeholder="00.000.000/0001-00"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo (opcional)</label>
+                  <input type="file" accept="image/*" onChange={(e) => setLogo(e.target.files?.[0] || null)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all" />
                 </div>
               </div>
             ) : null}

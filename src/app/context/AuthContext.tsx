@@ -13,7 +13,7 @@ interface User {
 }
 
 type RegisterData =
-  | { type: 'arena'; name: string; email: string; password: string; nomeArena: string; cnpj: string }
+  | { type: 'arena'; email: string; password: string; nomeArena: string; cnpj: string; razaoSocial: string; bairro: string; estado: string; endereco: string; logo?: File | null }
   | { type: 'atleta'; name: string; email: string; password: string; cpf: string; dataNascimento: string; apelido: string }
   | { type: 'profissional'; name: string; email: string; password: string; cpf: string; dataNascimento: string; especialidade: string; valorHora: number };
 
@@ -128,10 +128,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: RegisterData) => {
+    let body;
+    let headers: Record<string, string> = {};
+
+    if (data.type === 'arena') {
+      const formData = new FormData();
+      formData.append('email', data.email);
+      formData.append('password', data.password);
+      formData.append('nomeArena', data.nomeArena);
+      formData.append('cnpj', data.cnpj);
+      formData.append('razaoSocial', data.razaoSocial);
+      formData.append('bairro', data.bairro);
+      formData.append('estado', data.estado);
+      formData.append('endereco', data.endereco);
+      if (data.logo) {
+        formData.append('logo', data.logo);
+      }
+      body = formData;
+    } else {
+      body = JSON.stringify(data);
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(`${apiBase}/auth/register/${data.type}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      headers,
+      body,
     });
     const payload = await response.json();
     if (!response.ok) {
