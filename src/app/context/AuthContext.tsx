@@ -9,6 +9,7 @@ interface User {
   email: string;
   type: UserType;
   isComplete?: boolean;
+  status?: string;
 }
 
 type RegisterData =

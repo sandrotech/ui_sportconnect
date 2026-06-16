@@ -152,8 +152,19 @@ export function ArenaDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0 md:pl-12'}`}>
-        <Outlet />
+      <div className={`transition-all duration-300 relative ${sidebarOpen ? 'md:ml-64' : 'md:ml-0 md:pl-12'}`}>
+        {user?.status === 'PENDING' && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center pt-24 bg-white/60 backdrop-blur-sm">
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-6 rounded-2xl max-w-md text-center shadow-lg mx-4">
+              <h3 className="text-xl font-bold mb-2">Conta em Análise</h3>
+              <p>Sua arena foi cadastrada com sucesso, mas o acesso completo está aguardando a aprovação de um administrador.</p>
+              <p className="mt-2 text-sm">Você poderá utilizar todas as funções da plataforma assim que seu cadastro for liberado.</p>
+            </div>
+          </div>
+        )}
+        <div className={user?.status === 'PENDING' ? 'opacity-30 pointer-events-none select-none' : ''}>
+          <Outlet />
+        </div>
       </div>
 
       {/* Bottom Navigation (Mobile) */}
