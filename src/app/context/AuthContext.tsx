@@ -12,7 +12,7 @@ interface User {
 }
 
 type RegisterData =
-  | { type: 'arena'; name: string; email: string; password: string; cpf: string; dataNascimento: string; nomeArena: string; cnpj: string }
+  | { type: 'arena'; name: string; email: string; password: string; nomeArena: string; cnpj: string }
   | { type: 'atleta'; name: string; email: string; password: string; cpf: string; dataNascimento: string; apelido: string }
   | { type: 'profissional'; name: string; email: string; password: string; cpf: string; dataNascimento: string; especialidade: string; valorHora: number };
 
