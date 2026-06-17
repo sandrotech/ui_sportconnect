@@ -13,6 +13,7 @@ COPY . .
 
 # ⚙️ Corrige permissões e executa build
 RUN chmod +x ./node_modules/.bin/vite
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 # Etapa 2: Servidor Nginx
