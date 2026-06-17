@@ -24,8 +24,8 @@ export const api = {
   quadras: {
     minhas: () => request('GET', '/quadras/minhas'),
     byArena: (arenaId: number) => request('GET', `/quadras/arena/${arenaId}`),
-    create: (data: { nome: string; esporte: string; descricao?: string }) => request('POST', '/quadras', data),
-    update: (id: number, data: { nome?: string; esporte?: string; descricao?: string }) => request('PUT', `/quadras/${id}`, data),
+    create: (data: { nome: string; esportes: string[]; descricao?: string }) => request('POST', '/quadras', data),
+    update: (id: number, data: { nome?: string; esportes?: string[]; descricao?: string }) => request('PUT', `/quadras/${id}`, data),
     remove: (id: number) => request('DELETE', `/quadras/${id}`),
   },
 
@@ -37,7 +37,7 @@ export const api = {
   },
 
   reservas: {
-    criar: (data: { quadraId: number; horarioSlotId: number; data: string }) => request('POST', '/reservas', data),
+    criar: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string }) => request('POST', '/reservas', data),
     minhas: () => request('GET', '/reservas/minhas'),
     daArena: () => request('GET', '/reservas/arena'),
     atualizarStatus: (id: number, status: string) => request('PATCH', `/reservas/${id}/status`, { status }),

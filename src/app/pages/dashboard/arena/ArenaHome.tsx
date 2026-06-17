@@ -9,9 +9,16 @@ type Reserva = {
   status: string;
   data: string;
   createdAt: string;
+  esporte: string | null;
   valorPago: number | null;
-  quadra: { nome: string; esporte: string };
+  quadra: { nome: string; esportes: string[] };
   atletaUser: { id: number; name: string; avatar?: string };
+};
+
+type EsporteStat = {
+  esporte: string;
+  reservas: number;
+  faturamento: number;
 };
 
 type DashboardData = {
@@ -20,6 +27,7 @@ type DashboardData = {
   reservasPendentes: number;
   reservasSemana: number;
   faturamentoMes: number;
+  relatorioEsportes: EsporteStat[];
   ultimasReservas: Reserva[];
 };
 
@@ -126,48 +134,99 @@ export function ArenaHome() {
         ))}
       </div>
 
-      {/* Últimas Reservas */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h2 className="font-semibold text-lg text-[#000273] mb-4">Últimas Reservas</h2>
-        {(!data || data.ultimasReservas.length === 0) ? (
-          <div className="text-center py-12 text-gray-400">
-            <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">Nenhuma reserva ainda</p>
-            <p className="text-sm mt-1">Configure seus horários na tela de Disponibilidade para começar a receber reservas.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {data!.ultimasReservas.map((reserva) => (
-              <div key={reserva.id} className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  reserva.status === 'CONFIRMADA' ? 'bg-green-100' :
-                  reserva.status === 'CANCELADA' ? 'bg-red-100' : 'bg-orange-100'
-                }`}>
-                  <Calendar className={`w-5 h-5 ${
-                    reserva.status === 'CONFIRMADA' ? 'text-green-600' :
-                    reserva.status === 'CANCELADA' ? 'text-red-600' : 'text-orange-600'
-                  }`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-[#000273] truncate">{reserva.atletaUser.name}</p>
-                  <p className="text-sm text-gray-600 truncate">
-                    {reserva.quadra.nome} • {reserva.quadra.esporte} • {new Date(reserva.data).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    reserva.status === 'CONFIRMADA' ? 'bg-green-100 text-green-700' :
-                    reserva.status === 'CANCELADA' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                  }`}>{reserva.status}</span>
-                  {reserva.valorPago && (
-                    <span className="text-sm font-semibold text-[#000273]">R$ {Number(reserva.valorPago).toFixed(0)}</span>
-                  )}
-                </div>
+      {/* Gráficos e Reservas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Relatório de Modalidades */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-2">
+          <h2 className="font-semibold text-lg text-[#000273] mb-4">Desempenho por Modalidade</h2>
+          {(!data || !data.relatorioEsportes || data.relatorioEsportes.length === 0) ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <Layout className="w-12 h-12 mb-3 opacity-40" />
+              <p className="font-medium">Nenhum dado por esporte disponível</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.relatorioEsportes}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="esporte" tickLine={false} />
+                    <YAxis yAxisId="left" orientation="left" stroke="#004ef9" tickLine={false} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#ff4b00" tickLine={false} />
+                    <Tooltip cursor={{ fill: '#f3f4f6' }} />
+                    <Bar yAxisId="left" dataKey="faturamento" name="Faturamento (R$)" fill="#004ef9" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="reservas" name="Reservas (Qtd)" fill="#ff4b00" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {/* Tabela Resumo */}
+              <div className="border border-gray-100 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+                    <tr>
+                      <th className="p-3">Modalidade</th>
+                      <th className="p-3 text-right">Reservas</th>
+                      <th className="p-3 text-right">Faturamento</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {data.relatorioEsportes.map(stat => (
+                      <tr key={stat.esporte} className="hover:bg-gray-50/50">
+                        <td className="p-3 font-medium text-[#000273]">{stat.esporte}</td>
+                        <td className="p-3 text-right text-gray-600">{stat.reservas}</td>
+                        <td className="p-3 text-right font-semibold text-green-600">R$ {Number(stat.faturamento).toFixed(0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Últimas Reservas */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
+          <h2 className="font-semibold text-lg text-[#000273] mb-4">Últimas Reservas</h2>
+          {(!data || data.ultimasReservas.length === 0) ? (
+            <div className="text-center py-12 text-gray-400">
+              <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p className="font-medium">Nenhuma reserva ainda</p>
+              <p className="text-sm mt-1">Configure seus horários na tela de Disponibilidade para começar a receber reservas.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+              {data!.ultimasReservas.map((reserva) => (
+                <div key={reserva.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    reserva.status === 'CONFIRMADA' ? 'bg-green-100' :
+                    reserva.status === 'CANCELADA' ? 'bg-red-100' : 'bg-orange-100'
+                  }`}>
+                    <Calendar className={`w-4 h-4 ${
+                      reserva.status === 'CONFIRMADA' ? 'text-green-600' :
+                      reserva.status === 'CANCELADA' ? 'text-red-600' : 'text-orange-600'
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#000273] truncate text-sm">{reserva.atletaUser.name}</p>
+                    <p className="text-xs text-gray-600 truncate">
+                      {reserva.quadra.nome} • {reserva.esporte || reserva.quadra.esportes?.join(', ')}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      reserva.status === 'CONFIRMADA' ? 'bg-green-100 text-green-700' :
+                      reserva.status === 'CANCELADA' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                    }`}>{reserva.status}</span>
+                    {reserva.valorPago && (
+                      <span className="text-xs font-semibold text-[#000273]">R$ {Number(reserva.valorPago).toFixed(0)}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       {/* Dica quando não tem quadras */}
       {data && data.totalQuadras === 0 && (

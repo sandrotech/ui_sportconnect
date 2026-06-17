@@ -16,7 +16,7 @@ import { cn } from "../../../components/ui/utils";
 import { toast } from "sonner";
 import { api } from "@/app/lib/api";
 
-type Quadra = { id: number; nome: string; esporte: string; descricao?: string; ativa: boolean };
+type Quadra = { id: number; nome: string; esportes: string[]; descricao?: string; ativa: boolean };
 type HorarioSlot = {
   id?: number; quadraId?: number; diaSemana: string; horaInicio: number;
   disponivel: boolean; preco?: number; esporte?: string; duracao: number; intervalo: number;
@@ -50,7 +50,7 @@ export function Disponibilidade() {
   // Modal nova quadra
   const [novaQuadraOpen, setNovaQuadraOpen] = useState(false);
   const [novaQuadraNome, setNovaQuadraNome] = useState("");
-  const [novaQuadraEsporte, setNovaQuadraEsporte] = useState("Beach Tennis");
+  const [novaQuadraEsportes, setNovaQuadraEsportes] = useState<string[]>([]);
   const [novaQuadraDesc, setNovaQuadraDesc] = useState("");
 
   // Carregar quadras ao montar
@@ -180,12 +180,13 @@ export function Disponibilidade() {
 
   async function criarQuadra() {
     if (!novaQuadraNome.trim()) return toast.error("Informe o nome da quadra");
+    if (novaQuadraEsportes.length === 0) return toast.error("Selecione pelo menos um esporte para a quadra");
     try {
-      const nova = await api.quadras.create({ nome: novaQuadraNome, esporte: novaQuadraEsporte, descricao: novaQuadraDesc }) as Quadra;
+      const nova = await api.quadras.create({ nome: novaQuadraNome, esportes: novaQuadraEsportes, descricao: novaQuadraDesc }) as Quadra;
       setQuadras(prev => [...prev, nova]);
       setSelectedQuadraId(nova.id);
       setNovaQuadraOpen(false);
-      setNovaQuadraNome(""); setNovaQuadraEsporte("Beach Tennis"); setNovaQuadraDesc("");
+      setNovaQuadraNome(""); setNovaQuadraEsportes([]); setNovaQuadraDesc("");
       toast.success("Quadra criada!");
     } catch (e: any) {
       toast.error(e.message || "Erro ao criar quadra");
@@ -615,11 +616,13 @@ export function Disponibilidade() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <div className="text-sm font-medium">Esporte</div>
+                    <div className="text-sm font-medium">Esporte Padrão</div>
                     <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
-                        {ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                        {(quadras.find(q => q.id === selectedQuadraId)?.esportes || []).map(e => (
+                          <SelectItem key={e} value={e}>{e}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -664,13 +667,32 @@ export function Disponibilidade() {
           <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
-              <div className="py-4 space-y-4">
+              <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
                 <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-                <div className="space-y-2"><label className="text-sm font-medium">Esporte principal</label>
-                  <Select value={novaQuadraEsporte} onValueChange={setNovaQuadraEsporte}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-                  </Select>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {ESPORTES.map(e => {
+                      const checked = novaQuadraEsportes.includes(e);
+                      return (
+                        <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              if (checked) {
+                                setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
+                              } else {
+                                setNovaQuadraEsportes(prev => [...prev, e]);
+                              }
+                            }}
+                            className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
+                          />
+                          {e}
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
               </div>

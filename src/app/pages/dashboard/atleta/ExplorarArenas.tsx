@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 import { useIsMobile } from '../../../components/ui/use-mobile';
 import { api } from '@/app/lib/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '../../../components/ui/dialog';
+import { Button } from '../../../components/ui/button';
 
 type ArenaApi = {
   id: number;
@@ -18,7 +20,7 @@ type ArenaApi = {
   user: { id: number; name: string };
 };
 
-type Quadra = { id: number; nome: string; esporte: string };
+type Quadra = { id: number; nome: string; esportes: string[] };
 type HorarioSlot = {
   id: number;
   quadraId: number;
@@ -28,7 +30,7 @@ type HorarioSlot = {
   preco?: number;
   esporte?: string;
   duracao: number;
-  quadra: { id: number; nome: string; esporte: string };
+  quadra: { id: number; nome: string; esportes: string[] };
 };
 
 const ESPORTES_FILTER = ['Beach Tennis', 'Vôlei', 'Futebol', 'Padel', 'Basquete'];
@@ -51,6 +53,9 @@ export function ExplorarArenas() {
   const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [reservando, setReservando] = useState<number | null>(null); // horarioSlotId sendo reservado
+  const [reservaModalOpen, setReservaModalOpen] = useState(false);
+  const [selectedSlotForReserva, setSelectedSlotForReserva] = useState<HorarioSlot | null>(null);
+  const [selectedSportForReserva, setSelectedSportForReserva] = useState('');
 
   useEffect(() => {
     // Data padrão = hoje
@@ -97,16 +102,31 @@ export function ExplorarArenas() {
     return horarios.filter(h => h.diaSemana === dia && h.disponivel);
   }, [horarios, selectedDate]);
 
-  async function reservar(slot: HorarioSlot) {
-    if (!selectedArena || !selectedDate) return;
-    setReservando(slot.id);
+  function iniciarReserva(slot: HorarioSlot) {
+    const sports = slot.quadra.esportes || [];
+    setSelectedSlotForReserva(slot);
+    setSelectedSportForReserva(sports[0] || '');
+    setReservaModalOpen(true);
+  }
+
+  async function confirmarReserva() {
+    if (!selectedSlotForReserva || !selectedArena || !selectedDate) return;
+    if (!selectedSportForReserva) {
+      alert("Por favor, selecione uma modalidade.");
+      return;
+    }
+    setReservando(selectedSlotForReserva.id);
+    setReservaModalOpen(false);
     try {
       await api.reservas.criar({
-        quadraId: slot.quadraId,
-        horarioSlotId: slot.id,
+        quadraId: selectedSlotForReserva.quadraId,
+        horarioSlotId: selectedSlotForReserva.id,
         data: selectedDate,
+        esporte: selectedSportForReserva,
       });
-      alert(`✅ Reserva solicitada com sucesso!\nQuadra: ${slot.quadra.nome}\nHorário: ${String(slot.horaInicio).padStart(2, '0')}:00\nData: ${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}`);
+      alert(`✅ Reserva solicitada com sucesso!\nQuadra: ${selectedSlotForReserva.quadra.nome}\nModalidade: ${selectedSportForReserva}\nHorário: ${String(selectedSlotForReserva.horaInicio).padStart(2, '0')}:00\nData: ${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}`);
+      // Atualizar horários carregando de novo
+      abrirDetalhe(selectedArena);
     } catch (e: any) {
       alert(`❌ Erro: ${e.message}`);
     } finally {
@@ -186,14 +206,14 @@ export function ExplorarArenas() {
                         <span className="font-semibold text-[#000273]">{String(slot.horaInicio).padStart(2, '0')}:00</span>
                         <span className="text-sm text-gray-500">({slot.duracao} min)</span>
                       </div>
-                      <p className="text-sm text-gray-600">{slot.quadra.nome} • {slot.esporte || slot.quadra.esporte}</p>
+                      <p className="text-sm text-gray-600">{slot.quadra.nome} • {slot.esporte || slot.quadra.esportes?.join(', ')}</p>
                     </div>
                     <div className="text-right">
                       {slot.preco && (
                         <p className="font-bold text-[#000273] mb-2">R$ {Number(slot.preco).toFixed(0)}</p>
                       )}
                       <button
-                        onClick={() => reservar(slot)}
+                        onClick={() => iniciarReserva(slot)}
                         disabled={reservando === slot.id}
                         className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white text-sm hover:opacity-90 disabled:opacity-60 transition-all flex items-center gap-2"
                       >
@@ -207,6 +227,58 @@ export function ExplorarArenas() {
             </div>
           )}
         </div>
+
+        {/* Modal de Confirmação de Reserva com Seleção de Esporte */}
+        <Dialog open={reservaModalOpen} onOpenChange={setReservaModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirmar Reserva</DialogTitle>
+            </DialogHeader>
+            {selectedSlotForReserva && (
+              <div className="py-4 space-y-4">
+                <div className="p-4 bg-gray-50 rounded-xl space-y-2 text-sm text-gray-700">
+                  <p><strong>Arena:</strong> {selectedArena.nomeArena}</p>
+                  <p><strong>Quadra:</strong> {selectedSlotForReserva.quadra.nome}</p>
+                  <p><strong>Data:</strong> {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                  <p><strong>Horário:</strong> {String(selectedSlotForReserva.horaInicio).padStart(2, '0')}:00 ({selectedSlotForReserva.duracao} min)</p>
+                  {selectedSlotForReserva.preco && (
+                    <p className="text-[#004ef9] font-bold text-base"><strong>Valor:</strong> R$ {Number(selectedSlotForReserva.preco).toFixed(0)}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-[#000273]">Selecione a Modalidade</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {(selectedSlotForReserva.quadra.esportes || []).map(esp => (
+                      <button
+                        key={esp}
+                        type="button"
+                        onClick={() => setSelectedSportForReserva(esp)}
+                        className={`px-4 py-2 rounded-xl text-sm border font-medium transition-all ${
+                          selectedSportForReserva === esp
+                            ? 'bg-[#004ef9] text-white border-[#004ef9]'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {esp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <div className="flex w-full items-center justify-end gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
+                <Button className="bg-[#004ef9] hover:bg-[#003cb3] text-white" onClick={confirmarReserva}>
+                  Confirmar e Solicitar
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     );
   }
