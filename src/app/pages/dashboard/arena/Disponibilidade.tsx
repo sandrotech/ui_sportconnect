@@ -357,17 +357,6 @@ export function Disponibilidade() {
         <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={() => setNovaQuadraOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />Cadastrar Quadra
         </Button>
-        <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2"><label className="text-sm font-medium">Nome</label><Input value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-            </div>
-            <DialogFooter>
-              <Button onClick={criarQuadra}>Salvar Quadra</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     );
   }
@@ -476,6 +465,21 @@ export function Disponibilidade() {
                         }}>
                           {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </Button>
+                        {slot?.id && !isReserved && (
+                          <Button variant="destructive" size="icon" className="w-8 h-8 rounded-md" onClick={async () => {
+                            if(confirm("Deseja apagar este horário?")) {
+                              try {
+                                await api.horarios.deleteSlot(slot.id!);
+                                toast.success("Horário apagado!");
+                                fetchHorarios(selectedQuadraId);
+                              } catch(e:any) {
+                                toast.error(e.message || "Erro ao apagar");
+                              }
+                            }
+                          }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -535,8 +539,32 @@ export function Disponibilidade() {
               <Button onClick={saveEditor}><Save className="w-4 h-4 mr-1" /> Salvar</Button>
             </div>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </motion.div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal Nova Quadra Global */}
+        <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Quadra</label>
+                <Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Esportes (separados por vírgula)</label>
+                <Input placeholder="Ex: Vôlei, Beach Tennis" onChange={e => setNovaQuadraEsportes(e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Descrição (Opcional)</label>
+                <Input placeholder="Detalhes da quadra" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={criarQuadra}>Salvar Quadra</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
   );
 }
