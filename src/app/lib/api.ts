@@ -38,6 +38,7 @@ export const api = {
 
   reservas: {
     criar: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string }) => request('POST', '/reservas', data),
+    criarManual: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string; nomeCliente: string; telefoneCliente?: string }) => request('POST', '/reservas/manual', data),
     minhas: () => request('GET', '/reservas/minhas'),
     daArena: () => request('GET', '/reservas/arena'),
     atualizarStatus: (id: number, status: string) => request('PATCH', `/reservas/${id}/status`, { status }),
