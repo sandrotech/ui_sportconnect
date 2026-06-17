@@ -44,7 +44,7 @@ export function Disponibilidade() {
   const [loadingQuadras, setLoadingQuadras] = useState(true);
   const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [changeCount, setChangeCount] = useState(0);
+  const [hasChanges, setHasChanges] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [batchSelected, setBatchSelected] = useState<Record<string, boolean>>({});
   
@@ -167,7 +167,7 @@ export function Disponibilidade() {
       }
       return next;
     });
-    setChangeCount(c => c + 1);
+    setHasChanges(true);
     setEditorOpen(false);
   }
 
@@ -200,7 +200,7 @@ export function Disponibilidade() {
   }
 
   async function publish() {
-    if (!selectedQuadraId || changeCount === 0) return;
+    if (!selectedQuadraId || !hasChanges) return;
     setSaving(true);
     try {
       const allSlots: HorarioSlot[] = [];
@@ -219,7 +219,7 @@ export function Disponibilidade() {
         map[s.data][s.horaInicio.toString()] = s;
       });
       setSchedule(prev => ({ ...prev, [selectedQuadraId]: map }));
-      setChangeCount(0);
+      setHasChanges(false);
       toast.success("Disponibilidade publicada com sucesso!");
     } catch (e: any) {
       toast.error(e.message || "Erro ao salvar horários");
@@ -257,7 +257,7 @@ export function Disponibilidade() {
           newChanges++;
         }
       }
-      setChangeCount(c => c + newChanges);
+      setHasChanges(true);
       return next;
     });
     toast.success(`Configurações replicadas para ${daysToReplicate.length} dias! Clique em Salvar para efetivar.`);
@@ -323,7 +323,7 @@ export function Disponibilidade() {
         }
         return next;
       });
-      setChangeCount(c => c + selectedHours.length);
+      setHasChanges(true);
     }
     setBatchSelected({});
   }
@@ -372,8 +372,8 @@ export function Disponibilidade() {
           <Button variant="outline" onClick={() => setNovaQuadraOpen(true)}><PlusCircle className="w-4 h-4 mr-1" />Nova Quadra</Button>
           <Button variant="outline" onClick={() => setBatchMode(v => !v)}>Aplicar em lote</Button>
           <Button variant="secondary" onClick={replicateToRestOfMonth}><Copy className="w-4 h-4 mr-1" />Replicar pro Mês</Button>
-          <Button className="bg-green-600 text-white disabled:opacity-50" disabled={changeCount === 0 || saving} onClick={publish}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Publicar ({changeCount})
+          <Button className="bg-green-600 text-white disabled:opacity-50" disabled={!hasChanges || saving} onClick={publish}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Publicar
           </Button>
         </div>
       </div>
@@ -461,7 +461,7 @@ export function Disponibilidade() {
                             next[selectedQuadraId][dataStr][hour.toString()] = { ...existing, disponivel: !isAvailable };
                             return next;
                           });
-                          setChangeCount(c => c + 1);
+                          setHasChanges(true);
                         }}>
                           {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </Button>
