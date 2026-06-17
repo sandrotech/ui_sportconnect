@@ -20,4 +20,7 @@ export default defineConfig({
     host: true,
     allowedHosts: ['sportconnect.alessandrosantos.dev'],
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+  },
 })
