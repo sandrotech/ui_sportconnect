@@ -38,7 +38,7 @@ export const api = {
 
   reservas: {
     criar: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string }) => request('POST', '/reservas', data),
-    criarManual: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string; nomeCliente: string; telefoneCliente?: string }) => request('POST', '/reservas/manual', data),
+    criarManual: (data: { quadraId: number; horarioSlotId: number; data: string; esporte: string; nomeCliente: string; telefoneCliente?: string; cpfCliente?: string }) => request('POST', '/reservas/manual', data),
     minhas: () => request('GET', '/reservas/minhas'),
     daArena: () => request('GET', '/reservas/arena'),
     atualizarStatus: (id: number, status: string) => request('PATCH', `/reservas/${id}/status`, { status }),
@@ -48,5 +48,10 @@ export const api = {
     dashboard: () => request('GET', '/arena/dashboard'),
     all: () => request('GET', '/arena'),
     updateConfig: (data: { horaAbertura: string; horaFechamento: string }) => request('PUT', '/arena/config', data),
+  },
+
+  atleta: {
+    updateProfile: (data: FormData) => request('PUT', '/atleta/me', data, true),
+    findByCpf: (cpf: string) => request('GET', `/atleta/cpf/${cpf}`),
   },
 };

@@ -39,10 +39,12 @@ export function Agenda() {
   const [novaReservaQuadra, setNovaReservaQuadra] = useState<string>("");
   const [novaReservaData, setNovaReservaData] = useState<Date>(new Date());
   const [novaReservaSlotId, setNovaReservaSlotId] = useState<string>("");
+  const [novaReservaCpf, setNovaReservaCpf] = useState("");
   const [novaReservaNome, setNovaReservaNome] = useState("");
   const [novaReservaTelefone, setNovaReservaTelefone] = useState("");
   const [novaReservaEsporte, setNovaReservaEsporte] = useState("");
   const [savingManual, setSavingManual] = useState(false);
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
 
   useEffect(() => {
     fetchAgenda();
@@ -88,10 +90,28 @@ export function Agenda() {
     setNovaReservaData(selectedDate);
     setNovaReservaQuadra("");
     setNovaReservaSlotId("");
+    setNovaReservaCpf("");
     setNovaReservaNome("");
     setNovaReservaTelefone("");
     setNovaReservaEsporte("");
     setModalOpen(true);
+  }
+
+  async function handleBuscarCpf() {
+    if (!novaReservaCpf || novaReservaCpf.length < 11) return;
+    try {
+      setBuscandoCpf(true);
+      const atleta = await api.atleta.findByCpf(novaReservaCpf);
+      if (atleta) {
+        setNovaReservaNome(atleta.name);
+        setNovaReservaTelefone(atleta.telefone || "");
+        toast.success("Atleta encontrado!");
+      }
+    } catch (e: any) {
+      toast.error("Atleta não encontrado no sistema. Pode prosseguir com o preenchimento manual.");
+    } finally {
+      setBuscandoCpf(false);
+    }
   }
 
   async function handleCriarManual() {
@@ -107,7 +127,8 @@ export function Agenda() {
         data: dataFormatada,
         esporte: novaReservaEsporte,
         nomeCliente: novaReservaNome,
-        telefoneCliente: novaReservaTelefone
+        telefoneCliente: novaReservaTelefone,
+        cpfCliente: novaReservaCpf || undefined
       });
       toast.success("Reserva manual criada com sucesso!");
       setModalOpen(false);
@@ -278,7 +299,21 @@ export function Agenda() {
           <div className="grid gap-4 py-4">
             
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Nome do Cliente *</label>
+              <label className="text-sm font-medium flex items-center justify-between">
+                <span>CPF (Opcional)</span>
+                {buscandoCpf && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+              </label>
+              <Input 
+                placeholder="000.000.000-00" 
+                value={novaReservaCpf} 
+                onChange={e => setNovaReservaCpf(e.target.value)} 
+                onBlur={handleBuscarCpf}
+              />
+              <span className="text-[10px] text-gray-500 -mt-1">Ao digitar o CPF e sair do campo, o sistema tenta puxar o atleta automaticamente.</span>
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Nome Completo *</label>
               <Input placeholder="Ex: João Silva" value={novaReservaNome} onChange={e => setNovaReservaNome(e.target.value)} />
             </div>
 

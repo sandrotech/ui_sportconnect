@@ -84,20 +84,27 @@ export function Disponibilidade() {
       .finally(() => setLoadingQuadras(false));
   }, []);
 
-  useEffect(() => {
-    if (!selectedQuadraId) return;
+  async function fetchHorarios(quadraId?: number) {
+    const id = quadraId || selectedQuadraId;
+    if (!id) return;
     setLoadingHorarios(true);
-    api.horarios.byQuadra(selectedQuadraId)
-      .then((slots: HorarioSlot[]) => {
-        const map: Record<string, Record<string, HorarioSlot>> = {};
-        slots.forEach(s => {
-          if (!map[s.data]) map[s.data] = {};
-          map[s.data][s.horaInicio.toString()] = s;
-        });
-        setSchedule(prev => ({ ...prev, [selectedQuadraId]: map }));
-      })
-      .catch(() => toast.error("Erro ao carregar horários"))
-      .finally(() => setLoadingHorarios(false));
+    try {
+      const slots = await api.horarios.byQuadra(id);
+      const map: Record<string, Record<string, HorarioSlot>> = {};
+      slots.forEach((s: any) => {
+        if (!map[s.data]) map[s.data] = {};
+        map[s.data][s.horaInicio.toString()] = s;
+      });
+      setSchedule(prev => ({ ...prev, [id]: map }));
+    } catch {
+      toast.error("Erro ao carregar horários");
+    } finally {
+      setLoadingHorarios(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchHorarios(selectedQuadraId);
   }, [selectedQuadraId]);
 
   const selectedMap = useMemo(() => {
@@ -185,6 +192,8 @@ export function Disponibilidade() {
       });
       toast.success("Horário limpo com sucesso!");
       setEditorOpen(false);
+      // Forçar atualização da tela trazendo do banco
+      fetchHorarios(selectedQuadraId);
     } catch (e: any) {
       toast.error(e.message || "Erro ao apagar horário.");
     }
@@ -273,21 +282,49 @@ export function Disponibilidade() {
     setBatchSelected(prev => ({ ...prev, [hour.toString()]: checked }));
   }
 
-  function applyBatch(action: "block" | "unblock") {
+  async function applyBatch(action: "block" | "unblock" | "delete") {
     const selectedHours = Object.keys(batchSelected).filter(h => batchSelected[h]);
     if (selectedHours.length === 0 || !selectedQuadraId) return;
-    setSchedule(prev => {
-      const next = { ...prev };
-      next[selectedQuadraId] = { ...next[selectedQuadraId] };
-      if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
-      
-      for (const h of selectedHours) {
-        const existing = next[selectedQuadraId][dataStr][h] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: Number(h), quadraId: selectedQuadraId };
-        next[selectedQuadraId][dataStr][h] = { ...existing, disponivel: action === "unblock" };
+
+    if (action === "delete") {
+      try {
+        // Filtrar e deletar horários que já existem no banco
+        for (const h of selectedHours) {
+          const slot = selectedMap[h];
+          if (slot?.id) {
+            await api.horarios.deleteSlot(slot.id);
+          }
+        }
+        
+        setSchedule(prev => {
+          const next = { ...prev };
+          next[selectedQuadraId] = { ...next[selectedQuadraId] };
+          next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+          for (const h of selectedHours) {
+            delete next[selectedQuadraId][dataStr][h];
+          }
+          return next;
+        });
+
+        toast.success("Horários selecionados apagados!");
+        fetchHorarios(selectedQuadraId);
+      } catch (err: any) {
+        toast.error(err.message || "Erro ao apagar lotes");
       }
-      return next;
-    });
-    setChangeCount(c => c + selectedHours.length);
+    } else {
+      setSchedule(prev => {
+        const next = { ...prev };
+        next[selectedQuadraId] = { ...next[selectedQuadraId] };
+        if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
+        
+        for (const h of selectedHours) {
+          const existing = next[selectedQuadraId][dataStr][h] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: Number(h), quadraId: selectedQuadraId };
+          next[selectedQuadraId][dataStr][h] = { ...existing, disponivel: action === "unblock" };
+        }
+        return next;
+      });
+      setChangeCount(c => c + selectedHours.length);
+    }
     setBatchSelected({});
   }
 
@@ -456,7 +493,8 @@ export function Disponibilidade() {
           </div>
           <div className="h-6 w-px bg-gray-200" />
           <Button variant="outline" onClick={() => applyBatch("block")}>Bloquear</Button>
-          <Button onClick={() => applyBatch("unblock")}>Liberar</Button>
+          <Button variant="outline" onClick={() => applyBatch("unblock")}>Liberar</Button>
+          <Button variant="destructive" onClick={() => applyBatch("delete")}>Apagar</Button>
         </div>
       )}
 
