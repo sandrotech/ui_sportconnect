@@ -211,6 +211,7 @@ export function Disponibilidade() {
       return next;
     });
     setChangeCount(c => c + selectedHours.length);
+    setBatchSelected({});
   }
 
   const statusBadge = (slot?: HorarioSlot) => {
