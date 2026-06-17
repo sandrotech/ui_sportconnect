@@ -24,6 +24,7 @@ type Quadra = { id: number; nome: string; esportes: string[]; descricao?: string
 type HorarioSlot = {
   id?: number; quadraId?: number; data: string; horaInicio: number;
   disponivel: boolean; preco?: number; esporte?: string; duracao: number; intervalo: number;
+  reservas?: { status: string }[];
 };
 type Schedule = Record<number, Record<string, Record<string, HorarioSlot | undefined>>>;
 
@@ -163,6 +164,32 @@ export function Disponibilidade() {
     setEditorOpen(false);
   }
 
+  async function handleDeleteSlot() {
+    if (editorHour === null || !selectedQuadraId) return;
+    const slot = selectedMap[editorHour.toString()];
+    
+    if (slot?.reservas && slot.reservas.length > 0) {
+      return toast.error("Este horário possui reservas e não pode ser apagado.");
+    }
+
+    try {
+      if (slot?.id) {
+        await api.horarios.deleteSlot(slot.id);
+      }
+      setSchedule(prev => {
+        const next = { ...prev };
+        next[selectedQuadraId] = { ...next[selectedQuadraId] };
+        next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+        delete next[selectedQuadraId][dataStr][editorHour.toString()];
+        return next;
+      });
+      toast.success("Horário limpo com sucesso!");
+      setEditorOpen(false);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao apagar horário.");
+    }
+  }
+
   async function publish() {
     if (!selectedQuadraId || changeCount === 0) return;
     setSaving(true);
@@ -266,6 +293,7 @@ export function Disponibilidade() {
 
   const statusBadge = (slot?: HorarioSlot) => {
     if (!slot) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs">Não configurado</span>;
+    if (slot.reservas && slot.reservas.length > 0) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs"><Lock className="w-3 h-3" />Reservado</span>;
     if (slot.disponivel) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs"><Unlock className="w-3 h-3" />Disponível</span>;
     return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-xs"><Lock className="w-3 h-3" />Bloqueado</span>;
   };
@@ -380,12 +408,13 @@ export function Disponibilidade() {
                 {HORAS.map(hour => {
                   const slot = selectedMap[hour.toString()];
                   const isAvailable = slot?.disponivel ?? false;
+                  const isReserved = slot?.reservas && slot.reservas.length > 0;
                   const batchChecked = batchSelected[hour.toString()] || false;
                   return (
                     <div key={hour} className={cn("grid gap-3 p-4 rounded-xl border transition-all",
                       batchMode ? "grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,2fr]" : "grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,2fr]",
-                      isAvailable ? "bg-green-50 border-green-200 hover:shadow-lg" : slot ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100")}>
-                      {batchMode && <div className="flex items-center justify-center"><Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} /></div>}
+                      isReserved ? "bg-purple-50 border-purple-200" : isAvailable ? "bg-green-50 border-green-200 hover:shadow-lg" : slot ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100")}>
+                      {batchMode && <div className="flex items-center justify-center"><Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} disabled={isReserved} /></div>}
                       <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">{String(hour).padStart(2, "0")}:00</span></div>
                       <div className="flex items-center">{statusBadge(slot)}</div>
                       <div className="flex items-center text-sm text-gray-700">{slot?.esporte || "-"}</div>
@@ -396,7 +425,7 @@ export function Disponibilidade() {
                       <div className="flex items-center text-sm text-gray-700">{slot?.intervalo || 10} min</div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => openEditor(hour)}><Edit2 className="w-3 h-3" />Editar</Button>
-                        <Button variant="outline" size="sm" onClick={() => {
+                        <Button variant="outline" size="sm" disabled={isReserved} onClick={() => {
                           if (!selectedQuadraId) return;
                           setSchedule(prev => {
                             const next = { ...prev };
@@ -441,7 +470,6 @@ export function Disponibilidade() {
               <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
                 <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
                 <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
-                <ToggleGroupItem value="nao" variant="outline" className="flex-1">Não config.</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -462,9 +490,12 @@ export function Disponibilidade() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button>
-            <Button onClick={saveEditor}><Save className="w-4 h-4 mr-1" /> Salvar</Button>
+          <DialogFooter className="flex items-center justify-between mt-4">
+            <Button variant="destructive" onClick={handleDeleteSlot}>Apagar / Limpar</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button>
+              <Button onClick={saveEditor}><Save className="w-4 h-4 mr-1" /> Salvar</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
