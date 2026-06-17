@@ -227,6 +227,7 @@ export function ArenaHome() {
             </div>
           )}
         </div>
+      </div>
 
       {/* Dica quando não tem quadras */}
       {data && data.totalQuadras === 0 && (
