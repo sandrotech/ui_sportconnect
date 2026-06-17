@@ -308,13 +308,32 @@ export function Disponibilidade() {
         <Drawer open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen} direction="bottom">
           <DrawerContent>
             <DrawerHeader><DrawerTitle>Nova Quadra</DrawerTitle></DrawerHeader>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
               <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1, Quadra Coberta A" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Esporte principal</label>
-                <Select value={novaQuadraEsporte} onValueChange={setNovaQuadraEsporte}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {ESPORTES.map(e => {
+                    const checked = novaQuadraEsportes.includes(e);
+                    return (
+                      <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            if (checked) {
+                              setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
+                            } else {
+                              setNovaQuadraEsportes(prev => [...prev, e]);
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
+                        />
+                        {e}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
             </div>
@@ -459,13 +478,32 @@ export function Disponibilidade() {
         <Drawer open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen} direction="bottom">
           <DrawerContent>
             <DrawerHeader><DrawerTitle>Nova Quadra</DrawerTitle></DrawerHeader>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
               <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-              <div className="space-y-2"><label className="text-sm font-medium">Esporte principal</label>
-                <Select value={novaQuadraEsporte} onValueChange={setNovaQuadraEsporte}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {ESPORTES.map(e => {
+                    const checked = novaQuadraEsportes.includes(e);
+                    return (
+                      <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            if (checked) {
+                              setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
+                            } else {
+                              setNovaQuadraEsportes(prev => [...prev, e]);
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
+                        />
+                        {e}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
             </div>
