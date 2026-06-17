@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, Edit2, Lock, Unlock, Clock, DollarSign, Save, ChevronLeft,
-  MoreHorizontal, CheckSquare, Loader2, AlertCircle, PlusCircle, Trash2
+  MoreHorizontal, CheckSquare, Loader2, PlusCircle, Calendar as CalendarIcon,
+  Copy
 } from "lucide-react";
+import { format, isBefore, startOfToday, endOfMonth, eachDayOfInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Calendar } from "../../../components/ui/calendar";
 import { useIsMobile } from "../../../components/ui/use-mobile";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "../../../components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../../../components/ui/dialog";
@@ -18,28 +22,31 @@ import { api } from "@/app/lib/api";
 
 type Quadra = { id: number; nome: string; esportes: string[]; descricao?: string; ativa: boolean };
 type HorarioSlot = {
-  id?: number; quadraId?: number; diaSemana: string; horaInicio: number;
+  id?: number; quadraId?: number; data: string; horaInicio: number;
   disponivel: boolean; preco?: number; esporte?: string; duracao: number; intervalo: number;
 };
 type Schedule = Record<number, Record<string, Record<string, HorarioSlot | undefined>>>;
 
-const DIAS = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado", "Domingo"];
-const DIAS_LABEL: Record<string, string> = { Segunda: "Segunda", Terca: "Terça", Quarta: "Quarta", Quinta: "Quinta", Sexta: "Sexta", Sabado: "Sábado", Domingo: "Domingo" };
-const HORAS = Array.from({ length: 17 }, (_, i) => i + 6); // 6..22
 const ESPORTES = ["Beach Tennis", "Vôlei", "Futebol", "Basquete", "Padel", "Tênis", "Outro"];
 
 export function Disponibilidade() {
   const isMobile = useIsMobile();
   const [quadras, setQuadras] = useState<Quadra[]>([]);
-  const [selectedDay, setSelectedDay] = useState(DIAS[0]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedQuadraId, setSelectedQuadraId] = useState<number | null>(null);
   const [schedule, setSchedule] = useState<Schedule>({});
+  
+  // Arena configs
+  const [horaAbertura, setHoraAbertura] = useState("08:00");
+  const [horaFechamento, setHoraFechamento] = useState("22:00");
+
   const [loadingQuadras, setLoadingQuadras] = useState(true);
   const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changeCount, setChangeCount] = useState(0);
   const [batchMode, setBatchMode] = useState(false);
   const [batchSelected, setBatchSelected] = useState<Record<string, boolean>>({});
+  
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorHour, setEditorHour] = useState<number | null>(null);
   const [editorStatus, setEditorStatus] = useState<"disponivel" | "bloqueado" | "nao">("nao");
@@ -47,14 +54,26 @@ export function Disponibilidade() {
   const [editorDuration, setEditorDuration] = useState<number>(60);
   const [editorPrice, setEditorPrice] = useState<number | undefined>(undefined);
   const [editorInterval, setEditorInterval] = useState<number>(10);
-  // Modal nova quadra
+  
   const [novaQuadraOpen, setNovaQuadraOpen] = useState(false);
   const [novaQuadraNome, setNovaQuadraNome] = useState("");
   const [novaQuadraEsportes, setNovaQuadraEsportes] = useState<string[]>([]);
   const [novaQuadraDesc, setNovaQuadraDesc] = useState("");
 
-  // Carregar quadras ao montar
+  const dataStr = format(selectedDate, "yyyy-MM-dd");
+
+  const HORAS = useMemo(() => {
+    const start = parseInt(horaAbertura.split(":")[0]);
+    const end = parseInt(horaFechamento.split(":")[0]);
+    return Array.from({ length: (end - start) + 1 }, (_, i) => start + i);
+  }, [horaAbertura, horaFechamento]);
+
   useEffect(() => {
+    api.arena.dashboard().then((data: any) => {
+      if (data.horaAbertura) setHoraAbertura(data.horaAbertura);
+      if (data.horaFechamento) setHoraFechamento(data.horaFechamento);
+    });
+
     api.quadras.minhas()
       .then((data: Quadra[]) => {
         setQuadras(data);
@@ -64,18 +83,15 @@ export function Disponibilidade() {
       .finally(() => setLoadingQuadras(false));
   }, []);
 
-  // Carregar horários quando muda de quadra
   useEffect(() => {
     if (!selectedQuadraId) return;
-    if (schedule[selectedQuadraId]) return; // já carregado
     setLoadingHorarios(true);
     api.horarios.byQuadra(selectedQuadraId)
       .then((slots: HorarioSlot[]) => {
         const map: Record<string, Record<string, HorarioSlot>> = {};
-        DIAS.forEach(d => { map[d] = {}; });
         slots.forEach(s => {
-          if (!map[s.diaSemana]) map[s.diaSemana] = {};
-          map[s.diaSemana][s.horaInicio.toString()] = s;
+          if (!map[s.data]) map[s.data] = {};
+          map[s.data][s.horaInicio.toString()] = s;
         });
         setSchedule(prev => ({ ...prev, [selectedQuadraId]: map }));
       })
@@ -85,8 +101,8 @@ export function Disponibilidade() {
 
   const selectedMap = useMemo(() => {
     if (!selectedQuadraId || !schedule[selectedQuadraId]) return {};
-    return schedule[selectedQuadraId][selectedDay] || {};
-  }, [selectedQuadraId, selectedDay, schedule]);
+    return schedule[selectedQuadraId][dataStr] || {};
+  }, [selectedQuadraId, dataStr, schedule]);
 
   const metrics = useMemo(() => {
     let disponiveis = 0, bloqueados = 0, receita = 0;
@@ -98,7 +114,7 @@ export function Disponibilidade() {
       if (slot.preco) receita += Number(slot.preco);
     }
     return { disponiveis, bloqueados, receita };
-  }, [selectedMap]);
+  }, [selectedMap, HORAS]);
 
   function openEditor(hour: number) {
     const slot = selectedMap[hour.toString()];
@@ -124,15 +140,15 @@ export function Disponibilidade() {
     setSchedule(prev => {
       const next = { ...prev };
       next[selectedQuadraId] = { ...next[selectedQuadraId] };
-      next[selectedQuadraId][selectedDay] = { ...next[selectedQuadraId][selectedDay] };
+      next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
       if (editorStatus === "nao") {
-        delete next[selectedQuadraId][selectedDay][editorHour.toString()];
+        delete next[selectedQuadraId][dataStr][editorHour.toString()];
       } else {
-        const existing = next[selectedQuadraId][selectedDay][editorHour.toString()];
-        next[selectedQuadraId][selectedDay][editorHour.toString()] = {
+        const existing = next[selectedQuadraId][dataStr][editorHour.toString()];
+        next[selectedQuadraId][dataStr][editorHour.toString()] = {
           ...existing,
           quadraId: selectedQuadraId,
-          diaSemana: selectedDay,
+          data: dataStr,
           horaInicio: editorHour,
           disponivel: editorStatus === "disponivel",
           esporte: editorSport,
@@ -151,22 +167,20 @@ export function Disponibilidade() {
     if (!selectedQuadraId || changeCount === 0) return;
     setSaving(true);
     try {
-      // Coletamos todos os slots editados da quadra atual
       const allSlots: HorarioSlot[] = [];
       const quadraSchedule = schedule[selectedQuadraId] || {};
-      for (const [dia, horasMap] of Object.entries(quadraSchedule)) {
+      for (const [dataVal, horasMap] of Object.entries(quadraSchedule)) {
         for (const [hora, slot] of Object.entries(horasMap)) {
-          if (slot) allSlots.push({ ...slot, quadraId: selectedQuadraId, diaSemana: dia, horaInicio: Number(hora) });
+          if (slot) allSlots.push({ ...slot, quadraId: selectedQuadraId, data: dataVal, horaInicio: Number(hora) });
         }
       }
       await api.horarios.saveLote(allSlots);
-      // Recarregar os horários com IDs reais
+      
       const slots = await api.horarios.byQuadra(selectedQuadraId) as HorarioSlot[];
       const map: Record<string, Record<string, HorarioSlot>> = {};
-      DIAS.forEach(d => { map[d] = {}; });
       slots.forEach(s => {
-        if (!map[s.diaSemana]) map[s.diaSemana] = {};
-        map[s.diaSemana][s.horaInicio.toString()] = s;
+        if (!map[s.data]) map[s.data] = {};
+        map[s.data][s.horaInicio.toString()] = s;
       });
       setSchedule(prev => ({ ...prev, [selectedQuadraId]: map }));
       setChangeCount(0);
@@ -176,6 +190,41 @@ export function Disponibilidade() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function replicateToRestOfMonth() {
+    if (!selectedQuadraId) return;
+    const currentSlots = Object.values(selectedMap).filter(Boolean) as HorarioSlot[];
+    if (currentSlots.length === 0) return toast.error("Configure o dia atual antes de replicar");
+
+    const today = selectedDate;
+    const end = endOfMonth(today);
+    const daysToReplicate = eachDayOfInterval({ start: new Date(today.getTime() + 86400000), end });
+
+    if (daysToReplicate.length === 0) return toast.info("Não há dias restantes no mês");
+
+    setSchedule(prev => {
+      const next = { ...prev };
+      next[selectedQuadraId] = { ...next[selectedQuadraId] };
+      let newChanges = 0;
+
+      for (const d of daysToReplicate) {
+        const dStr = format(d, "yyyy-MM-dd");
+        if (!next[selectedQuadraId][dStr]) next[selectedQuadraId][dStr] = {};
+        
+        for (const slot of currentSlots) {
+          next[selectedQuadraId][dStr][slot.horaInicio.toString()] = {
+            ...slot,
+            data: dStr,
+            id: undefined // force new insert logic on backend/upsert
+          };
+          newChanges++;
+        }
+      }
+      setChangeCount(c => c + newChanges);
+      return next;
+    });
+    toast.success(`Configurações replicadas para ${daysToReplicate.length} dias! Clique em Salvar para efetivar.`);
   }
 
   async function criarQuadra() {
@@ -203,10 +252,11 @@ export function Disponibilidade() {
     setSchedule(prev => {
       const next = { ...prev };
       next[selectedQuadraId] = { ...next[selectedQuadraId] };
-      next[selectedQuadraId][selectedDay] = { ...next[selectedQuadraId][selectedDay] };
+      if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
+      
       for (const h of selectedHours) {
-        const existing = next[selectedQuadraId][selectedDay][h] || { disponivel: true, duracao: 60, intervalo: 10, diaSemana: selectedDay, horaInicio: Number(h), quadraId: selectedQuadraId };
-        next[selectedQuadraId][selectedDay][h] = { ...existing, disponivel: action === "unblock" };
+        const existing = next[selectedQuadraId][dataStr][h] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: Number(h), quadraId: selectedQuadraId };
+        next[selectedQuadraId][dataStr][h] = { ...existing, disponivel: action === "unblock" };
       }
       return next;
     });
@@ -231,70 +281,6 @@ export function Disponibilidade() {
     );
   }
 
-  const EditorDrawerContent = () => (
-    <>
-      <DrawerHeader>
-        <DrawerTitle>Editar {editorHour !== null ? `${String(editorHour).padStart(2, "0")}:00` : ""}</DrawerTitle>
-      </DrawerHeader>
-      <div className="p-4 space-y-4">
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Status</div>
-          <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
-            <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
-            <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
-            <ToggleGroupItem value="nao" variant="outline" className="flex-1">Não config.</ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Esporte</div>
-            <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Preço (R$)</div>
-            <Input type="number" value={editorPrice ?? ""} onChange={e => setEditorPrice(e.target.value ? Number(e.target.value) : undefined)} />
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Duração</div>
-            <Select value={String(editorDuration)} onValueChange={v => setEditorDuration(Number(v))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="60">60 min</SelectItem>
-                <SelectItem value="90">90 min</SelectItem>
-                <SelectItem value="120">120 min</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Intervalo</div>
-            <Select value={String(editorInterval)} onValueChange={v => setEditorInterval(Number(v))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 min</SelectItem>
-                <SelectItem value="15">15 min</SelectItem>
-                <SelectItem value="30">30 min</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      <DrawerFooter>
-        <div className="flex items-center justify-between gap-2">
-          <DrawerClose asChild><Button variant="ghost">Cancelar</Button></DrawerClose>
-          <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={saveEditor}>
-            <Save className="w-4 h-4" />Salvar
-          </Button>
-        </div>
-      </DrawerFooter>
-    </>
-  );
-
-  // Estado vazio: sem quadras
   if (quadras.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -302,449 +288,186 @@ export function Disponibilidade() {
           <PlusCircle className="w-10 h-10 text-[#004ef9]" />
         </div>
         <h2 className="font-montserrat font-bold text-2xl text-[#000273] mb-3">Sem quadras cadastradas</h2>
-        <p className="text-gray-600 mb-6 max-w-sm">Cadastre sua primeira quadra para começar a configurar horários e receber reservas dos atletas.</p>
+        <p className="text-gray-600 mb-6 max-w-sm">Cadastre sua primeira quadra para começar a configurar horários.</p>
         <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={() => setNovaQuadraOpen(true)}>
-          <Plus className="w-4 h-4" />Cadastrar Quadra
+          <Plus className="w-4 h-4 mr-2" />Cadastrar Quadra
         </Button>
-        <Drawer open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen} direction="bottom">
-          <DrawerContent>
-            <DrawerHeader><DrawerTitle>Nova Quadra</DrawerTitle></DrawerHeader>
-            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1, Quadra Coberta A" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {ESPORTES.map(e => {
-                    const checked = novaQuadraEsportes.includes(e);
-                    return (
-                      <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => {
-                            if (checked) {
-                              setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
-                            } else {
-                              setNovaQuadraEsportes(prev => [...prev, e]);
-                            }
-                          }}
-                          className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
-                        />
-                        {e}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
+        <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2"><label className="text-sm font-medium">Nome</label><Input value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
             </div>
-            <DrawerFooter>
-              <div className="flex gap-2">
-                <DrawerClose asChild><Button variant="outline" className="flex-1">Cancelar</Button></DrawerClose>
-                <Button className="flex-1 bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={criarQuadra}>Criar Quadra</Button>
-              </div>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+            <DialogFooter>
+              <Button onClick={criarQuadra}>Salvar Quadra</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.36 }} className="bg-[#f8f8f8] p-0 md:p-8">
-
-      {/* ── MOBILE ── */}
-      <div className="relative md:hidden">
-        <div className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b">
-          <div className="h-14 px-4 flex items-center justify-between">
-            <button className="p-2 rounded-lg hover:bg-gray-100" aria-label="Voltar"><ChevronLeft className="w-6 h-6 text-[#000273]" /></button>
-            <div className="text-center"><h1 className="font-montserrat font-semibold text-lg text-[#000273]">Disponibilidade</h1></div>
-            <div className="flex items-center gap-1">
-              <button className="p-2 rounded-lg hover:bg-gray-100" onClick={() => setNovaQuadraOpen(true)} aria-label="Nova quadra"><Plus className="w-6 h-6 text-[#004ef9]" /></button>
-              <button className="p-2 rounded-lg hover:bg-gray-100" onClick={() => setBatchMode(v => !v)} aria-label="Opções"><MoreHorizontal className="w-6 h-6 text-[#000273]" /></button>
-            </div>
-          </div>
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-[#f8f8f8] p-4 md:p-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+        <div>
+          <h1 className="font-montserrat font-semibold text-3xl text-[#000273]">Disponibilidade</h1>
+          <p className="text-gray-600">Configure seus horários por data específica</p>
         </div>
-
-        <div className="sticky top-14 z-30 bg-white border-b">
-          <div className="h-7 px-4 flex items-center justify-between text-xs">
-            <span className="text-[#000273]">{DIAS_LABEL[selectedDay]} • {quadras.find(q => q.id === selectedQuadraId)?.nome}</span>
-            <span className={cn("px-2 py-0.5 rounded-md", changeCount > 0 ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700")}>
-              {changeCount > 0 ? "Rascunho" : "Publicado"}
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setNovaQuadraOpen(true)}><PlusCircle className="w-4 h-4 mr-1" />Nova Quadra</Button>
+          <Button variant="outline" onClick={() => setBatchMode(v => !v)}>Aplicar em lote</Button>
+          <Button variant="secondary" onClick={replicateToRestOfMonth}><Copy className="w-4 h-4 mr-1" />Replicar pro Mês</Button>
+          <Button className="bg-green-600 text-white disabled:opacity-50" disabled={changeCount === 0 || saving} onClick={publish}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Publicar ({changeCount})
+          </Button>
         </div>
+      </div>
 
-        <div className="sticky top-[84px] z-20 bg-white/95 backdrop-blur-md border-b">
-          <div className="px-4 py-2 space-y-2">
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              {DIAS.map(day => (
-                <button key={day} onClick={() => setSelectedDay(day)}
-                  className={cn("px-3 py-2 rounded-full text-sm min-h-[44px] border", selectedDay === day ? "bg-[#004ef9] text-white border-[#004ef9]" : "bg-white text-gray-700 hover:bg-gray-100")}>
-                  {DIAS_LABEL[day].substring(0, 3)}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-4 lg:col-span-3 space-y-6">
+          <div className="bg-white rounded-2xl p-6 border">
+            <h3 className="font-semibold text-[#000273] mb-4">Selecione o Dia</h3>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => d && setSelectedDate(d)}
+              locale={ptBR}
+              disabled={(date) => isBefore(date, startOfToday())}
+              className="rounded-md border mx-auto"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border">
+            <h3 className="font-semibold text-[#000273] mb-4">Quadra</h3>
+            <div className="flex flex-col gap-2">
               {quadras.map(q => (
-                <button key={q.id} onClick={() => setSelectedQuadraId(q.id)}
-                  className={cn("px-3 py-2 rounded-full text-sm min-h-[44px] border whitespace-nowrap", selectedQuadraId === q.id ? "bg-[#ff4b00] text-white border-[#ff4b00]" : "bg-white text-gray-700 hover:bg-gray-100")}>
+                <Button key={q.id} variant={selectedQuadraId === q.id ? "default" : "outline"} onClick={() => setSelectedQuadraId(q.id)} className="w-full justify-start">
                   {q.nome}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
         </div>
 
-        <div className={cn("px-4 pt-3 space-y-4", batchMode ? "pb-[200px]" : "pb-28")}>
-          <div className="grid grid-cols-3 gap-4 min-w-0">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-              <p className="text-xs text-blue-600 mb-1">Disponíveis</p>
+        <div className="md:col-span-8 lg:col-span-9 space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <p className="text-xs text-blue-600">Disponíveis</p>
               <p className="text-lg font-semibold text-blue-700">{metrics.disponiveis}</p>
             </div>
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-              <p className="text-xs text-gray-600 mb-1">Bloqueados</p>
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <p className="text-xs text-gray-600">Bloqueados</p>
               <p className="text-lg font-semibold text-gray-700">{metrics.bloqueados}</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-              <p className="text-xs text-green-600 mb-1">Receita (dia)</p>
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <p className="text-xs text-green-600">Receita Estimada</p>
               <p className="text-lg font-semibold text-green-700">R$ {metrics.receita}</p>
             </div>
           </div>
 
-          {loadingHorarios ? (
-            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 text-[#004ef9] animate-spin" /></div>
-          ) : (
-            <div className="space-y-3">
-              {HORAS.map(hour => {
-                const slot = selectedMap[hour.toString()];
-                const isAvailable = slot?.disponivel ?? false;
-                const batchChecked = batchSelected[hour.toString()] || false;
-                return (
-                  <div key={hour}
-                    className={cn("bg-white rounded-2xl p-4 border min-h-[80px] active:scale-[0.99] transition-transform",
-                      isAvailable ? "border-green-200 bg-green-50" : slot ? "border-gray-200 bg-gray-50" : "border-gray-100")}
-                    onClick={() => !batchMode && openEditor(hour)}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {batchMode && <Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} className="size-5" />}
-                        <Clock className="w-5 h-5 text-gray-400" />
-                        <span className="font-semibold text-[#000273] text-base">{String(hour).padStart(2, "0")}:00</span>
-                        <div className="ml-2">{statusBadge(slot)}</div>
-                      </div>
-                      <span className={cn("text-sm font-semibold", slot?.preco ? "text-[#000273]" : "text-gray-400")}>
-                        {slot?.preco ? `R$ ${slot.preco}` : "—"}
-                      </span>
-                    </div>
-                    <div className="mt-2 text-sm text-gray-600">
-                      {slot?.esporte ? <span>{slot.esporte} • {slot.duracao || 60} min</span> : <span>Sem configuração</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="fixed bottom-[76px] left-0 right-0 z-30 px-4 pb-[env(safe-area-inset-bottom)]">
-          <div className="bg-white border rounded-xl p-3 shadow-md flex items-center justify-between">
-            <div className="text-sm">{changeCount > 0 ? `${changeCount} alterações` : "Sem alterações"}</div>
-            <Button variant="default" className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white disabled:opacity-50" disabled={changeCount === 0 || saving} onClick={publish}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Publicar
-            </Button>
-          </div>
-        </div>
-
-        {batchMode && (
-          <div className="fixed bottom-[136px] left-0 right-0 z-30 px-4">
-            <div className="bg-white border rounded-xl p-3 shadow-md">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-[#000273]" />
-                  <span className="text-sm">Selecionados ({Object.values(batchSelected).filter(Boolean).length})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => applyBatch("block")}>Bloquear</Button>
-                  <Button variant="outline" size="sm" onClick={() => applyBatch("unblock")}>Liberar</Button>
-                </div>
+          <div className="bg-white rounded-2xl border p-4">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b">
+              <div className="font-semibold text-lg text-[#000273] capitalize">
+                {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </div>
             </div>
-          </div>
-        )}
 
-        <Drawer open={editorOpen} onOpenChange={setEditorOpen} direction="bottom">
-          <DrawerContent><EditorDrawerContent /></DrawerContent>
-        </Drawer>
-        <Drawer open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen} direction="bottom">
-          <DrawerContent>
-            <DrawerHeader><DrawerTitle>Nova Quadra</DrawerTitle></DrawerHeader>
-            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
+            {loadingHorarios ? (
+              <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {ESPORTES.map(e => {
-                    const checked = novaQuadraEsportes.includes(e);
-                    return (
-                      <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => {
-                            if (checked) {
-                              setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
-                            } else {
-                              setNovaQuadraEsportes(prev => [...prev, e]);
-                            }
-                          }}
-                          className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
-                        />
-                        {e}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
-            </div>
-            <DrawerFooter>
-              <div className="flex gap-2">
-                <DrawerClose asChild><Button variant="outline" className="flex-1">Cancelar</Button></DrawerClose>
-                <Button className="flex-1 bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={criarQuadra}>Criar Quadra</Button>
-              </div>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-      </div>
-
-      {/* ── DESKTOP ── */}
-      <div className="hidden md:block">
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="font-montserrat font-semibold text-3xl text-[#000273] mb-1">Disponibilidade das Quadras</h1>
-              <p className="text-gray-600">Gerencie horários, preços e disponibilidade</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setNovaQuadraOpen(true)}>
-                <PlusCircle className="w-4 h-4" />Nova Quadra
-              </Button>
-              <Button variant="outline" onClick={() => setBatchMode(v => !v)}>Aplicar em lote</Button>
-              <Button variant="default" className="bg-green-600 text-white disabled:opacity-50" disabled={changeCount === 0 || saving} onClick={publish}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Publicar Disponibilidade
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-2xl p-6 border">
-              <div className="font-semibold text-[#000273] mb-4">Dia da Semana</div>
-              <div className="flex flex-wrap gap-2">
-                {DIAS.map(day => (
-                  <Button key={day} variant={selectedDay === day ? "default" : "outline"} onClick={() => setSelectedDay(day)}>
-                    {DIAS_LABEL[day]}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 border">
-              <div className="font-semibold text-[#000273] mb-4 flex items-center justify-between">
-                <span>Quadra</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {quadras.map(q => (
-                  <Button key={q.id} variant={selectedQuadraId === q.id ? "default" : "outline"} onClick={() => setSelectedQuadraId(q.id)}>
-                    {q.nome}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {loadingHorarios ? (
-            <div className="flex items-center justify-center py-20 bg-white rounded-2xl border">
-              <Loader2 className="w-8 h-8 text-[#004ef9] animate-spin" />
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border">
-              <div className="sticky top-0 z-10 bg-white border-b p-4 flex items-center justify-between">
-                <div className="font-semibold text-lg text-[#000273]">
-                  {quadras.find(q => q.id === selectedQuadraId)?.nome} — {DIAS_LABEL[selectedDay]}
-                </div>
-                <div className="text-sm px-2 py-1 rounded-md bg-gray-100 text-gray-700">
-                  {changeCount > 0 ? `${changeCount} alterações não publicadas` : "Publicado"}
-                </div>
-              </div>
-
-              <div className="min-w-[800px] p-4">
-                <div className={cn("grid gap-3 mb-3 font-semibold text-sm text-gray-600", batchMode ? "grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,2fr]" : "grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,2fr]")}>
-                  {batchMode && <div className="text-center">Sel.</div>}
-                  <div>Horário</div><div>Status</div><div>Esporte</div><div>Duração</div><div>Preço Base</div><div>Intervalo</div><div className="">Ações</div>
-                </div>
-
-                <div className="space-y-2">
-                  {HORAS.map(hour => {
-                    const slot = selectedMap[hour.toString()];
-                    const isAvailable = slot?.disponivel ?? false;
-                    const batchChecked = batchSelected[hour.toString()] || false;
-                    return (
-                      <div key={hour} className={cn("grid gap-3 p-4 rounded-xl border transition-all",
-                        batchMode ? "grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,2fr]" : "grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,2fr]",
-                        isAvailable ? "bg-green-50 border-green-200 hover:shadow-lg" : slot ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100")}>
-                        {batchMode && <div className="flex items-center justify-center"><Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} /></div>}
-                        <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">{String(hour).padStart(2, "0")}:00</span></div>
-                        <div className="flex items-center">{statusBadge(slot)}</div>
-                        <div className="flex items-center text-sm text-gray-700">{slot?.esporte || "-"}</div>
-                        <div className="flex items-center text-sm text-gray-700">{slot?.duracao || 60} min</div>
-                        <div className="flex items-center gap-1 text-sm">
-                          {slot?.preco ? <><DollarSign className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">R$ {slot.preco}</span></> : <span className="text-gray-400">-</span>}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-700">{slot?.intervalo || 10} min</div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openEditor(hour)}><Edit2 className="w-3 h-3" />Editar</Button>
-                          <Button variant="outline" size="sm" onClick={() => {
-                            if (!selectedQuadraId) return;
-                            setSchedule(prev => {
-                              const next = { ...prev };
-                              next[selectedQuadraId] = { ...next[selectedQuadraId] };
-                              next[selectedQuadraId][selectedDay] = { ...next[selectedQuadraId][selectedDay] };
-                              const existing = next[selectedQuadraId][selectedDay][hour.toString()] || { disponivel: true, duracao: 60, intervalo: 10, diaSemana: selectedDay, horaInicio: hour, quadraId: selectedQuadraId };
-                              next[selectedQuadraId][selectedDay][hour.toString()] = { ...existing, disponivel: !isAvailable };
-                              return next;
-                            });
-                            setChangeCount(c => c + 1);
-                          }}>
-                            {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                            {isAvailable ? "Bloquear" : "Liberar"}
-                          </Button>
-                        </div>
+                {HORAS.map(hour => {
+                  const slot = selectedMap[hour.toString()];
+                  const isAvailable = slot?.disponivel ?? false;
+                  const batchChecked = batchSelected[hour.toString()] || false;
+                  return (
+                    <div key={hour} className={cn("grid gap-3 p-4 rounded-xl border transition-all",
+                      batchMode ? "grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,2fr]" : "grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,2fr]",
+                      isAvailable ? "bg-green-50 border-green-200 hover:shadow-lg" : slot ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100")}>
+                      {batchMode && <div className="flex items-center justify-center"><Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} /></div>}
+                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">{String(hour).padStart(2, "0")}:00</span></div>
+                      <div className="flex items-center">{statusBadge(slot)}</div>
+                      <div className="flex items-center text-sm text-gray-700">{slot?.esporte || "-"}</div>
+                      <div className="flex items-center text-sm text-gray-700">{slot?.duracao || 60} min</div>
+                      <div className="flex items-center gap-1 text-sm">
+                        {slot?.preco ? <><DollarSign className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">R$ {slot.preco}</span></> : <span className="text-gray-400">-</span>}
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex items-center text-sm text-gray-700">{slot?.intervalo || 10} min</div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => openEditor(hour)}><Edit2 className="w-3 h-3" />Editar</Button>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          if (!selectedQuadraId) return;
+                          setSchedule(prev => {
+                            const next = { ...prev };
+                            next[selectedQuadraId] = { ...next[selectedQuadraId] };
+                            if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
+                            const existing = next[selectedQuadraId][dataStr][hour.toString()] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: hour, quadraId: selectedQuadraId };
+                            next[selectedQuadraId][dataStr][hour.toString()] = { ...existing, disponivel: !isAvailable };
+                            return next;
+                          });
+                          setChangeCount(c => c + 1);
+                        }}>
+                          {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          )}
-
-          {batchMode && (
-            <div className="mt-4 bg-white border rounded-xl p-3 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-[#000273]" />
-                <span className="text-sm">Selecionados: {Object.values(batchSelected).filter(Boolean).length}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => applyBatch("block")}>Bloquear</Button>
-                <Button variant="outline" onClick={() => applyBatch("unblock")}>Liberar</Button>
-              </div>
-            </div>
-          )}
-
-          <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Editar {editorHour !== null ? `${String(editorHour).padStart(2, "0")}:00` : ""}</DialogTitle></DialogHeader>
-              <div className="py-4 space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Status</div>
-                  <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
-                    <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
-                    <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
-                    <ToggleGroupItem value="nao" variant="outline" className="flex-1">Não config.</ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Esporte Padrão</div>
-                    <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                      <SelectContent>
-                        {(quadras.find(q => q.id === selectedQuadraId)?.esportes || []).map(e => (
-                          <SelectItem key={e} value={e}>{e}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Preço (R$)</div>
-                    <Input type="number" value={editorPrice ?? ""} onChange={e => setEditorPrice(e.target.value ? Number(e.target.value) : undefined)} />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Duração</div>
-                    <Select value={String(editorDuration)} onValueChange={v => setEditorDuration(Number(v))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="60">60 min</SelectItem>
-                        <SelectItem value="90">90 min</SelectItem>
-                        <SelectItem value="120">120 min</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Intervalo</div>
-                    <Select value={String(editorInterval)} onValueChange={v => setEditorInterval(Number(v))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10">10 min</SelectItem>
-                        <SelectItem value="15">15 min</SelectItem>
-                        <SelectItem value="30">30 min</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <div className="flex w-full items-center justify-end gap-2">
-                  <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-                  <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={saveEditor}>
-                    <Save className="w-4 h-4 mr-1" />Salvar
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
-              <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-                <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Esportes suportados nesta quadra</label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    {ESPORTES.map(e => {
-                      const checked = novaQuadraEsportes.includes(e);
-                      return (
-                        <label key={e} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer text-sm">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              if (checked) {
-                                setNovaQuadraEsportes(prev => prev.filter(x => x !== e));
-                              } else {
-                                setNovaQuadraEsportes(prev => [...prev, e]);
-                              }
-                            }}
-                            className="rounded border-gray-300 text-[#004ef9] focus:ring-[#004ef9]"
-                          />
-                          {e}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
-              </div>
-              <DialogFooter>
-                <div className="flex w-full items-center justify-end gap-2">
-                  <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-                  <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={criarQuadra}>Criar Quadra</Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            )}
+          </div>
         </div>
       </div>
+
+      {batchMode && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-white border rounded-full px-6 py-3 shadow-xl flex items-center gap-4">
+          <div className="flex items-center gap-2 font-medium">
+            <CheckSquare className="w-5 h-5 text-[#000273]" /> Selecionados: {Object.values(batchSelected).filter(Boolean).length}
+          </div>
+          <div className="h-6 w-px bg-gray-200" />
+          <Button variant="outline" onClick={() => applyBatch("block")}>Bloquear</Button>
+          <Button onClick={() => applyBatch("unblock")}>Liberar</Button>
+        </div>
+      )}
+
+      {/* Dialog do Editor */}
+      <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar {editorHour !== null ? `${String(editorHour).padStart(2, "0")}:00` : ""}</DialogTitle></DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Status</div>
+              <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
+                <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
+                <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
+                <ToggleGroupItem value="nao" variant="outline" className="flex-1">Não config.</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Esporte Padrão</div>
+                <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {(quadras.find(q => q.id === selectedQuadraId)?.esportes || []).map(e => (
+                      <SelectItem key={e} value={e}>{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Preço (R$)</div>
+                <Input type="number" value={editorPrice ?? ""} onChange={e => setEditorPrice(e.target.value ? Number(e.target.value) : undefined)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button>
+            <Button onClick={saveEditor}><Save className="w-4 h-4 mr-1" /> Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

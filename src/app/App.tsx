@@ -12,6 +12,7 @@ import { Login } from './pages/Login';
 import { ArenaDashboard } from './pages/dashboard/ArenaDashboard';
 import { ArenaHome } from './pages/dashboard/arena/ArenaHome';
 import { Agenda as ArenaAgenda } from './pages/dashboard/arena/Agenda';
+import { Configuracoes as ArenaConfiguracoes } from './pages/dashboard/arena/Configuracoes';
 import { Disponibilidade } from './pages/dashboard/arena/Disponibilidade';
 import { AtletaDashboard } from './pages/dashboard/AtletaDashboard';
 import { ProfissionalDashboard } from './pages/dashboard/ProfissionalDashboard';
@@ -1059,30 +1060,7 @@ export default function App() {
               path="configuracoes"
               element={
                 <div className="p-8">
-                  <div className="mb-6">
-                    <h1 className="font-montserrat italic font-semibold text-3xl text-[#000273] mb-1">Configurações</h1>
-                    <p className="text-gray-600">Bem-vindo ao seu painel de gestão</p>
-                  </div>
-                  <div className="max-w-4xl mx-auto">
-                    <motion.div
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.36, ease: 'easeOut' }}
-                      className="bg-white rounded-3xl p-10 shadow-lg ring-1 ring-black/5"
-                    >
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#004ef9] to-[#ff4b00] flex items-center justify-center mb-4">
-                          <Settings className="w-8 h-8 text-white" />
-                        </div>
-                        <h2 className="font-montserrat italic font-semibold text-2xl text-[#000273] mb-1">
-                          Módulo Configurações
-                        </h2>
-                        <p className="text-gray-600">
-                          Interface do módulo em desenvolvimento
-                        </p>
-                      </div>
-                    </motion.div>
-                  </div>
+                  <ArenaConfiguracoes />
                 </div>
               }
             />
