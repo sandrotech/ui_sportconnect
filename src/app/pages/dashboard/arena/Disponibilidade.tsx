@@ -465,15 +465,29 @@ export function Disponibilidade() {
                         }}>
                           {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </Button>
-                        {slot?.id && !isReserved && (
+                        {slot && !isReserved && (
                           <Button variant="destructive" size="icon" className="w-8 h-8 rounded-md" onClick={async () => {
-                            if(confirm("Deseja apagar este horário?")) {
-                              try {
-                                await api.horarios.deleteSlot(slot.id!);
-                                toast.success("Horário apagado!");
+                            if(confirm("Deseja apagar/limpar este horário?")) {
+                              if (slot.id) {
+                                try {
+                                  await api.horarios.deleteSlot(slot.id);
+                                  toast.success("Horário apagado!");
+                                } catch(e:any) {
+                                  return toast.error(e.message || "Erro ao apagar");
+                                }
+                              }
+                              // Limpar localmente também
+                              setSchedule(prev => {
+                                const next = { ...prev };
+                                next[selectedQuadraId] = { ...next[selectedQuadraId] };
+                                next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+                                delete next[selectedQuadraId][dataStr][hour.toString()];
+                                return next;
+                              });
+                              if (!slot.id) {
+                                toast.success("Horário limpo!");
+                              } else {
                                 fetchHorarios(selectedQuadraId);
-                              } catch(e:any) {
-                                toast.error(e.message || "Erro ao apagar");
                               }
                             }
                           }}>
