@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data?.error || 'Falha ao autenticar');
     }
 
-    const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole };
+    const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole; isComplete?: boolean; status?: string };
     const mappedType = apiUser.role.toLowerCase() as UserType;
     
     // Permitir que o administrador master acesse todos os 3 portais (arena, atleta, profissional)
@@ -82,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: apiUser.name,
       email: apiUser.email,
       type: finalType,
+      isComplete: apiUser.isComplete,
+      status: apiUser.status,
     };
 
     setUser(nextUser);
@@ -108,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return data;
     }
 
-    const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole; isComplete?: boolean };
+    const apiUser = data.user as { id: string; name: string; email: string; role: ApiRole; isComplete?: boolean; status?: string };
     const mappedType = apiUser.role.toLowerCase() as UserType;
 
     const nextUser = {
@@ -117,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: apiUser.email,
       type: mappedType,
       isComplete: apiUser.isComplete,
+      status: apiUser.status,
     };
 
     setUser(nextUser);
