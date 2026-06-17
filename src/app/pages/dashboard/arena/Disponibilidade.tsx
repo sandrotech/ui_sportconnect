@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "../../../components/ui/use-mobile";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "../../../components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../../../components/ui/select";
@@ -600,13 +601,70 @@ export function Disponibilidade() {
             </div>
           )}
 
-          <Drawer open={editorOpen} onOpenChange={setEditorOpen} direction="right">
-            <DrawerContent><EditorDrawerContent /></DrawerContent>
-          </Drawer>
-          <Drawer open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen} direction="right">
-            <DrawerContent>
-              <DrawerHeader><DrawerTitle>Nova Quadra</DrawerTitle></DrawerHeader>
-              <div className="p-4 space-y-4">
+          <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader><DialogTitle>Editar {editorHour !== null ? `${String(editorHour).padStart(2, "0")}:00` : ""}</DialogTitle></DialogHeader>
+              <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Status</div>
+                  <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
+                    <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
+                    <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
+                    <ToggleGroupItem value="nao" variant="outline" className="flex-1">Não config.</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Esporte</div>
+                    <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {ESPORTES.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Preço (R$)</div>
+                    <Input type="number" value={editorPrice ?? ""} onChange={e => setEditorPrice(e.target.value ? Number(e.target.value) : undefined)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Duração</div>
+                    <Select value={String(editorDuration)} onValueChange={v => setEditorDuration(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="60">60 min</SelectItem>
+                        <SelectItem value="90">90 min</SelectItem>
+                        <SelectItem value="120">120 min</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Intervalo</div>
+                    <Select value={String(editorInterval)} onValueChange={v => setEditorInterval(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10 min</SelectItem>
+                        <SelectItem value="15">15 min</SelectItem>
+                        <SelectItem value="30">30 min</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <div className="flex w-full items-center justify-end gap-2">
+                  <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                  <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={saveEditor}>
+                    <Save className="w-4 h-4 mr-1" />Salvar
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
+              <div className="py-4 space-y-4">
                 <div className="space-y-2"><label className="text-sm font-medium">Nome da quadra</label><Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} /></div>
                 <div className="space-y-2"><label className="text-sm font-medium">Esporte principal</label>
                   <Select value={novaQuadraEsporte} onValueChange={setNovaQuadraEsporte}>
@@ -616,14 +674,14 @@ export function Disponibilidade() {
                 </div>
                 <div className="space-y-2"><label className="text-sm font-medium">Descrição (opcional)</label><Input placeholder="Ex: Quadra de areia coberta" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} /></div>
               </div>
-              <DrawerFooter>
-                <div className="flex gap-2">
-                  <DrawerClose asChild><Button variant="outline" className="flex-1">Cancelar</Button></DrawerClose>
-                  <Button className="flex-1 bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={criarQuadra}>Criar Quadra</Button>
+              <DialogFooter>
+                <div className="flex w-full items-center justify-end gap-2">
+                  <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                  <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={criarQuadra}>Criar Quadra</Button>
                 </div>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </motion.div>
