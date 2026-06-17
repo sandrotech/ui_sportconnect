@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown, Calendar, DollarSign, Users, AlertCircle, Lay
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '../../../components/ui/use-mobile';
-import { api } from '../../lib/api';
+import { api } from '@/app/lib/api';
 
 type Reserva = {
   id: number;

@@ -13,7 +13,7 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group";
 import { cn } from "../../../components/ui/utils";
 import { toast } from "sonner";
-import { api } from "../../lib/api";
+import { api } from "@/app/lib/api";
 
 type Quadra = { id: number; nome: string; esporte: string; descricao?: string; ativa: boolean };
 type HorarioSlot = {

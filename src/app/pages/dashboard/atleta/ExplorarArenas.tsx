@@ -2,7 +2,7 @@ import { MapPin, Star, Search as SearchIcon, Clock, ChevronRight, Loader2, Layou
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 import { useIsMobile } from '../../../components/ui/use-mobile';
-import { api } from '../../lib/api';
+import { api } from '@/app/lib/api';
 
 type ArenaApi = {
   id: number;
