@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Plus, Edit2, Lock, Unlock, Clock, DollarSign, Save, ChevronLeft,
   MoreHorizontal, CheckSquare, Loader2, PlusCircle, Calendar as CalendarIcon,
-  Copy
+  Copy, Trash2
 } from "lucide-react";
 import { format, isBefore, startOfToday, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,7 +22,7 @@ import { api } from "@/app/lib/api";
 
 type Quadra = { id: number; nome: string; esportes: string[]; descricao?: string; ativa: boolean };
 type HorarioSlot = {
-  id?: number; quadraId?: number; data: string; horaInicio: number;
+  id?: number; quadraId?: number; data: string; horaInicio: string;
   disponivel: boolean; preco?: number; esporte?: string; duracao: number; intervalo: number;
   reservas?: { status: string }[];
 };
@@ -32,6 +32,30 @@ const ESPORTES = ["Beach Tennis", "Vôlei", "Futebol", "Basquete", "Padel", "Tê
 
 export function Disponibilidade() {
   const isMobile = useIsMobile();
+  const [renderError, setRenderError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (args[0] && typeof args[0] === "string" && args[0].includes("The above error occurred in the")) {
+        // Ignora o log secundário
+      } else {
+        setRenderError(args.join(" "));
+      }
+      originalError.apply(console, args);
+    };
+    const handleError = (e: ErrorEvent) => setRenderError(e.message);
+    window.addEventListener("error", handleError);
+    return () => {
+      console.error = originalError;
+      window.removeEventListener("error", handleError);
+    };
+  }, []);
+
+  if (renderError) {
+    return <div className="p-10 text-red-500 font-bold font-mono">Erro no React: {renderError}</div>;
+  }
+
   const [quadras, setQuadras] = useState<Quadra[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedQuadraId, setSelectedQuadraId] = useState<number | null>(null);
@@ -49,8 +73,10 @@ export function Disponibilidade() {
   const [batchSelected, setBatchSelected] = useState<Record<string, boolean>>({});
   
   const [editorOpen, setEditorOpen] = useState(false);
-  const [editorHour, setEditorHour] = useState<number | null>(null);
-  const [editorStatus, setEditorStatus] = useState<"disponivel" | "bloqueado" | "nao">("nao");
+  const [isNewSlot, setIsNewSlot] = useState(false);
+  const [editorHourStart, setEditorHourStart] = useState<string>("08:00");
+  const [editorHourEnd, setEditorHourEnd] = useState<string>("09:00");
+  const [editorStatus, setEditorStatus] = useState<"disponivel" | "bloqueado">("disponivel");
   const [editorSport, setEditorSport] = useState<string | undefined>(undefined);
   const [editorDuration, setEditorDuration] = useState<number>(60);
   const [editorPrice, setEditorPrice] = useState<number | undefined>(undefined);
@@ -62,12 +88,6 @@ export function Disponibilidade() {
   const [novaQuadraDesc, setNovaQuadraDesc] = useState("");
 
   const dataStr = format(selectedDate, "yyyy-MM-dd");
-
-  const HORAS = useMemo(() => {
-    const start = parseInt(horaAbertura.split(":")[0]);
-    const end = parseInt(horaFechamento.split(":")[0]);
-    return Array.from({ length: (end - start) + 1 }, (_, i) => start + i);
-  }, [horaAbertura, horaFechamento]);
 
   useEffect(() => {
     api.arena.dashboard().then((data: any) => {
@@ -93,7 +113,8 @@ export function Disponibilidade() {
       const map: Record<string, Record<string, HorarioSlot>> = {};
       slots.forEach((s: any) => {
         if (!map[s.data]) map[s.data] = {};
-        map[s.data][s.horaInicio.toString()] = s;
+        const hString = String(s.horaInicio).includes(":") ? s.horaInicio : `${String(s.horaInicio).padStart(2, '0')}:00`;
+        map[s.data][hString] = s;
       });
       setSchedule(prev => ({ ...prev, [id]: map }));
     } catch {
@@ -112,10 +133,14 @@ export function Disponibilidade() {
     return schedule[selectedQuadraId][dataStr] || {};
   }, [selectedQuadraId, dataStr, schedule]);
 
+  const HORAS = useMemo(() => {
+    return Object.keys(selectedMap).sort((a, b) => a.localeCompare(b));
+  }, [selectedMap]);
+
   const metrics = useMemo(() => {
     let disponiveis = 0, bloqueados = 0, receita = 0;
-    for (const h of HORAS) {
-      const slot = selectedMap[h.toString()];
+    for (const hStr of HORAS) {
+      const slot = selectedMap[hStr];
       if (!slot) continue;
       if (slot.disponivel) disponiveis++;
       else bloqueados++;
@@ -124,79 +149,106 @@ export function Disponibilidade() {
     return { disponiveis, bloqueados, receita };
   }, [selectedMap, HORAS]);
 
-  function openEditor(hour: number) {
-    const slot = selectedMap[hour.toString()];
-    setEditorHour(hour);
-    if (!slot) {
-      setEditorStatus("nao");
-      setEditorSport(undefined);
-      setEditorDuration(60);
-      setEditorPrice(undefined);
-      setEditorInterval(10);
-    } else {
-      setEditorStatus(slot.disponivel ? "disponivel" : "bloqueado");
-      setEditorSport(slot.esporte);
-      setEditorDuration(slot.duracao || 60);
-      setEditorPrice(slot.preco);
-      setEditorInterval(slot.intervalo || 10);
-    }
+  function openEditorNovo() {
+    setIsNewSlot(true);
+    const start = horaAbertura || "08:00";
+    setEditorHourStart(start);
+    const [h, m] = start.split(":");
+    const endH = String((parseInt(h) + 1) % 24).padStart(2, "0");
+    setEditorHourEnd(`${endH}:${m}`);
+    
+    setEditorStatus("disponivel");
+    setEditorSport(undefined);
+    setEditorDuration(60);
+    setEditorPrice(undefined);
+    setEditorInterval(10);
     setEditorOpen(true);
   }
 
-  function saveEditor() {
-    if (editorHour === null || !selectedQuadraId) return;
-    setSchedule(prev => {
-      const next = { ...prev };
-      next[selectedQuadraId] = { ...next[selectedQuadraId] };
-      next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
-      if (editorStatus === "nao") {
-        delete next[selectedQuadraId][dataStr][editorHour.toString()];
-      } else {
-        const existing = next[selectedQuadraId][dataStr][editorHour.toString()];
-        next[selectedQuadraId][dataStr][editorHour.toString()] = {
-          ...existing,
+  async function gerarGradePadrao() {
+    if (!selectedQuadraId) return;
+    const sHour = parseInt(horaAbertura.split(":")[0]) || 8;
+    const eHour = parseInt(horaFechamento.split(":")[0]) || 22;
+    const newSlots: HorarioSlot[] = [];
+    for(let i = sHour; i < eHour; i++) {
+      const hStr = `${String(i).padStart(2, '0')}:00`;
+      if (!selectedMap[hStr]) {
+        newSlots.push({
           quadraId: selectedQuadraId,
           data: dataStr,
-          horaInicio: editorHour,
-          disponivel: editorStatus === "disponivel",
-          esporte: editorSport,
-          duracao: editorDuration,
-          preco: editorPrice,
-          intervalo: editorInterval,
-        };
+          horaInicio: hStr,
+          disponivel: true,
+          duracao: 60,
+          intervalo: 10
+        });
       }
-      return next;
-    });
-    setHasChanges(true);
-    setEditorOpen(false);
-  }
-
-  async function handleDeleteSlot() {
-    if (editorHour === null || !selectedQuadraId) return;
-    const slot = selectedMap[editorHour.toString()];
-    
-    if (slot?.reservas && slot.reservas.length > 0) {
-      return toast.error("Este horário possui reservas e não pode ser apagado.");
     }
-
     try {
-      if (slot?.id) {
-        await api.horarios.deleteSlot(slot.id);
-      }
+      const res = await api.horarios.saveLote(newSlots);
       setSchedule(prev => {
         const next = { ...prev };
         next[selectedQuadraId] = { ...next[selectedQuadraId] };
         next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
-        delete next[selectedQuadraId][dataStr][editorHour.toString()];
+        res.forEach((s: any) => {
+          const hString = String(s.horaInicio).includes(":") ? s.horaInicio : `${String(s.horaInicio).padStart(2, '0')}:00`;
+          next[selectedQuadraId][dataStr][hString] = s;
+        });
         return next;
       });
-      toast.success("Horário limpo com sucesso!");
-      setEditorOpen(false);
-      // Forçar atualização da tela trazendo do banco
-      fetchHorarios(selectedQuadraId);
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao apagar horário.");
+      toast.success("Grade gerada!");
+    } catch { toast.error("Erro ao gerar grade"); }
+  }
+
+  async function saveEditor() {
+    if (!selectedQuadraId || !editorHourStart || !editorHourEnd) return;
+    
+    const [sH, sM] = editorHourStart.split(":").map(Number);
+    const [eH, eM] = editorHourEnd.split(":").map(Number);
+    const duracao = (eH * 60 + eM) - (sH * 60 + sM);
+    
+    if (duracao <= 0) {
+      toast.error("A hora de fim deve ser depois da hora de início!");
+      return;
     }
+
+    const existingSlot = selectedMap[editorHourStart];
+
+    const payload = { 
+        id: isNewSlot ? undefined : existingSlot?.id,
+        quadraId: selectedQuadraId, 
+        data: dataStr, 
+        horaInicio: editorHourStart, 
+        disponivel: editorStatus === "disponivel", 
+        esporte: editorSport, 
+        duracao: duracao, 
+        preco: editorPrice, 
+        intervalo: editorInterval 
+    };
+    try {
+        const res = await api.horarios.saveLote([payload]);
+        setSchedule(prev => {
+            const next = { ...prev };
+            next[selectedQuadraId] = { ...next[selectedQuadraId] };
+            next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+            next[selectedQuadraId][dataStr][editorHourStart] = res[0];
+            return next;
+        });
+        setEditorOpen(false);
+        toast.success("Salvo!");
+    } catch (e: any) { toast.error(e.message); }
+  }
+
+  async function handleDeleteSlot(hourStr: string) {
+    if (!selectedQuadraId || !selectedMap[hourStr]?.id) return;
+    try {
+      await api.horarios.deleteSlot(selectedMap[hourStr]!.id!);
+      setSchedule(prev => {
+        const next = { ...prev };
+        delete next[selectedQuadraId][dataStr][hourStr];
+        return next;
+      });
+      toast.success("Apagado!");
+    } catch (e: any) { toast.error(e.message); }
   }
 
   async function publish() {
@@ -207,25 +259,13 @@ export function Disponibilidade() {
       const quadraSchedule = schedule[selectedQuadraId] || {};
       for (const [dataVal, horasMap] of Object.entries(quadraSchedule)) {
         for (const [hora, slot] of Object.entries(horasMap)) {
-          if (slot) allSlots.push({ ...slot, quadraId: selectedQuadraId, data: dataVal, horaInicio: Number(hora) });
+          if (slot) allSlots.push({ ...slot, data: dataVal, horaInicio: hora });
         }
       }
       await api.horarios.saveLote(allSlots);
-      
-      const slots = await api.horarios.byQuadra(selectedQuadraId) as HorarioSlot[];
-      const map: Record<string, Record<string, HorarioSlot>> = {};
-      slots.forEach(s => {
-        if (!map[s.data]) map[s.data] = {};
-        map[s.data][s.horaInicio.toString()] = s;
-      });
-      setSchedule(prev => ({ ...prev, [selectedQuadraId]: map }));
       setHasChanges(false);
-      toast.success("Disponibilidade publicada com sucesso!");
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao salvar horários");
-    } finally {
-      setSaving(false);
-    }
+      toast.success("Publicado!");
+    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
   }
 
   function replicateToRestOfMonth() {
@@ -249,7 +289,7 @@ export function Disponibilidade() {
         if (!next[selectedQuadraId][dStr]) next[selectedQuadraId][dStr] = {};
         
         for (const slot of currentSlots) {
-          next[selectedQuadraId][dStr][slot.horaInicio.toString()] = {
+          next[selectedQuadraId][dStr][slot.horaInicio] = {
             ...slot,
             data: dStr,
             id: undefined // force new insert logic on backend/upsert
@@ -273,13 +313,11 @@ export function Disponibilidade() {
       setNovaQuadraOpen(false);
       setNovaQuadraNome(""); setNovaQuadraEsportes([]); setNovaQuadraDesc("");
       toast.success("Quadra criada!");
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao criar quadra");
-    }
+    } catch (e: any) { toast.error(e.message); }
   }
 
-  function toggleBatch(hour: number, checked: boolean) {
-    setBatchSelected(prev => ({ ...prev, [hour.toString()]: checked }));
+  function toggleBatch(hourStr: string, checked: boolean) {
+    setBatchSelected(prev => ({ ...prev, [hourStr]: checked }));
   }
 
   async function applyBatch(action: "block" | "unblock" | "delete") {
@@ -288,9 +326,8 @@ export function Disponibilidade() {
 
     if (action === "delete") {
       try {
-        // Filtrar e deletar horários que já existem no banco
-        for (const h of selectedHours) {
-          const slot = selectedMap[h];
+        for (const hStr of selectedHours) {
+          const slot = selectedMap[hStr];
           if (slot?.id) {
             await api.horarios.deleteSlot(slot.id);
           }
@@ -300,14 +337,13 @@ export function Disponibilidade() {
           const next = { ...prev };
           next[selectedQuadraId] = { ...next[selectedQuadraId] };
           next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
-          for (const h of selectedHours) {
-            delete next[selectedQuadraId][dataStr][h];
+          for (const hStr of selectedHours) {
+            delete next[selectedQuadraId][dataStr][hStr];
           }
           return next;
         });
 
         toast.success("Horários selecionados apagados!");
-        fetchHorarios(selectedQuadraId);
       } catch (err: any) {
         toast.error(err.message || "Erro ao apagar lotes");
       }
@@ -317,9 +353,9 @@ export function Disponibilidade() {
         next[selectedQuadraId] = { ...next[selectedQuadraId] };
         if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
         
-        for (const h of selectedHours) {
-          const existing = next[selectedQuadraId][dataStr][h] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: Number(h), quadraId: selectedQuadraId };
-          next[selectedQuadraId][dataStr][h] = { ...existing, disponivel: action === "unblock" };
+        for (const hStr of selectedHours) {
+          const existing = next[selectedQuadraId][dataStr][hStr] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: hStr, quadraId: selectedQuadraId };
+          next[selectedQuadraId][dataStr][hStr] = { ...existing, disponivel: action === "unblock" };
         }
         return next;
       });
@@ -329,35 +365,96 @@ export function Disponibilidade() {
   }
 
   const statusBadge = (slot?: HorarioSlot) => {
-    if (!slot) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs">Não configurado</span>;
-    if (slot.reservas && slot.reservas.length > 0) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs"><Lock className="w-3 h-3" />Reservado</span>;
-    if (slot.disponivel) return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs"><Unlock className="w-3 h-3" />Disponível</span>;
-    return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-xs"><Lock className="w-3 h-3" />Bloqueado</span>;
+    if (!slot) return <span className="text-xs text-gray-400">Vazio</span>;
+    if (slot.reservas && slot.reservas.length > 0) return <span className="text-xs text-orange-600 font-bold">Reservado</span>;
+    if (slot.disponivel) return <span className="text-xs text-emerald-600 font-bold">Disponível</span>;
+    return <span className="text-xs text-gray-600 font-bold">Bloqueado</span>;
   };
 
-  if (loadingQuadras) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 text-[#004ef9] animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Carregando quadras...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loadingQuadras) return <div className="p-10 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-[#004ef9]" /></div>;
 
   if (quadras.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-[#004ef9]/10 flex items-center justify-center mb-6">
-          <PlusCircle className="w-10 h-10 text-[#004ef9]" />
+      <>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-[#004ef9]/10 flex items-center justify-center mb-6">
+            <PlusCircle className="w-10 h-10 text-[#004ef9]" />
+          </div>
+          <h2 className="font-montserrat font-bold text-2xl text-[#000273] mb-3">Sem quadras cadastradas</h2>
+          <p className="text-gray-600 mb-6 max-w-sm">Cadastre sua primeira quadra para começar a configurar horários.</p>
+          <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={() => setNovaQuadraOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />Cadastrar Quadra
+          </Button>
         </div>
-        <h2 className="font-montserrat font-bold text-2xl text-[#000273] mb-3">Sem quadras cadastradas</h2>
-        <p className="text-gray-600 mb-6 max-w-sm">Cadastre sua primeira quadra para começar a configurar horários.</p>
-        <Button className="bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white" onClick={() => setNovaQuadraOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />Cadastrar Quadra
-        </Button>
-      </div>
+        <Dialog open={novaQuadraOpen} onOpenChange={setNovaQuadraOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nova Quadra</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Quadra</label>
+                <Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} />
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Adicionar Esporte</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Ex: Futebol" 
+                      id="input-esporte"
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val) {
+                            const formatted = val.charAt(0).toUpperCase() + val.slice(1);
+                            if (!novaQuadraEsportes.includes(formatted)) {
+                              setNovaQuadraEsportes(prev => [...prev, formatted]);
+                            }
+                            e.currentTarget.value = "";
+                          }
+                        }
+                      }} 
+                    />
+                    <Button variant="outline" onClick={() => {
+                      const input = document.getElementById("input-esporte") as HTMLInputElement;
+                      if (input) {
+                        const val = input.value.trim();
+                        if (val) {
+                          const formatted = val.charAt(0).toUpperCase() + val.slice(1);
+                          if (!novaQuadraEsportes.includes(formatted)) {
+                            setNovaQuadraEsportes(prev => [...prev, formatted]);
+                          }
+                          input.value = "";
+                        }
+                      }
+                    }}><Plus className="w-4 h-4 mr-1"/> Adicionar</Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Digite o nome do esporte e pressione Enter.</p>
+                </div>
+                {novaQuadraEsportes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
+                    {novaQuadraEsportes.map(e => (
+                      <div key={e} className="flex items-center gap-1 bg-white border px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+                        <span className="text-[#000273]">{e}</span>
+                        <button onClick={() => setNovaQuadraEsportes(prev => prev.filter(x => x !== e))} className="ml-1 text-gray-400 hover:text-red-500 transition-colors">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Descrição (Opcional)</label>
+                <Input placeholder="Detalhes da quadra" value={novaQuadraDesc} onChange={e => setNovaQuadraDesc(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={criarQuadra}>Salvar Quadra</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -379,32 +476,16 @@ export function Disponibilidade() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="md:col-span-4 lg:col-span-3 space-y-6">
+        <div className="md:col-span-3 space-y-6">
+          <Calendar mode="single" selected={selectedDate} onSelect={(d) => d && setSelectedDate(d)} locale={ptBR} className="bg-white rounded-2xl border" />
           <div className="bg-white rounded-2xl p-6 border">
-            <h3 className="font-semibold text-[#000273] mb-4">Selecione o Dia</h3>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
-              locale={ptBR}
-              disabled={(date) => isBefore(date, startOfToday())}
-              className="rounded-md border mx-auto"
-            />
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border">
-            <h3 className="font-semibold text-[#000273] mb-4">Quadra</h3>
-            <div className="flex flex-col gap-2">
-              {quadras.map(q => (
-                <Button key={q.id} variant={selectedQuadraId === q.id ? "default" : "outline"} onClick={() => setSelectedQuadraId(q.id)} className="w-full justify-start">
-                  {q.nome}
-                </Button>
-              ))}
-            </div>
+            {quadras.map(q => (
+              <Button key={q.id} variant={selectedQuadraId === q.id ? "default" : "outline"} className="w-full mb-2" onClick={() => setSelectedQuadraId(q.id)}>{q.nome}</Button>
+            ))}
           </div>
         </div>
 
-        <div className="md:col-span-8 lg:col-span-9 space-y-4">
+        <div className="md:col-span-9 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <p className="text-xs text-blue-600">Disponíveis</p>
@@ -425,84 +506,99 @@ export function Disponibilidade() {
               <div className="font-semibold text-lg text-[#000273] capitalize">
                 {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={openEditorNovo}>
+                  <Plus className="w-4 h-4 mr-1" /> Adicionar Horário
+                </Button>
+              </div>
             </div>
-
+          
             {loadingHorarios ? (
               <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : HORAS.length === 0 ? (
+              <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+                <CalendarIcon className="w-12 h-12 mb-4 text-gray-300" />
+                <p>Nenhum horário configurado neste dia.</p>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={gerarGradePadrao}>Gerar Grade Padrão</Button>
+                  <Button variant="outline" onClick={openEditorNovo}>Adicionar Horário</Button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-2">
-                {HORAS.map(hour => {
-                  const slot = selectedMap[hour.toString()];
-                  const isAvailable = slot?.disponivel ?? false;
-                  const isReserved = slot?.reservas && slot.reservas.length > 0;
-                  const batchChecked = batchSelected[hour.toString()] || false;
-                  return (
-                    <div key={hour} className={cn("grid gap-3 p-4 rounded-xl border transition-all",
-                      batchMode ? "grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,2fr]" : "grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,2fr]",
-                      isReserved ? "bg-purple-50 border-purple-200" : isAvailable ? "bg-green-50 border-green-200 hover:shadow-lg" : slot ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100")}>
-                      {batchMode && <div className="flex items-center justify-center"><Checkbox checked={batchChecked} onCheckedChange={v => toggleBatch(hour, !!v)} disabled={isReserved} /></div>}
-                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">{String(hour).padStart(2, "0")}:00</span></div>
-                      <div className="flex items-center">{statusBadge(slot)}</div>
-                      <div className="flex items-center text-sm text-gray-700">{slot?.esporte || "-"}</div>
-                      <div className="flex items-center text-sm text-gray-700">{slot?.duracao || 60} min</div>
-                      <div className="flex items-center gap-1 text-sm">
-                        {slot?.preco ? <><DollarSign className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">R$ {slot.preco}</span></> : <span className="text-gray-400">-</span>}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-700">{slot?.intervalo || 10} min</div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEditor(hour)}><Edit2 className="w-3 h-3" />Editar</Button>
-                        <Button variant="outline" size="sm" disabled={isReserved} onClick={() => {
-                          if (!selectedQuadraId) return;
-                          setSchedule(prev => {
-                            const next = { ...prev };
-                            next[selectedQuadraId] = { ...next[selectedQuadraId] };
-                            if (!next[selectedQuadraId][dataStr]) next[selectedQuadraId][dataStr] = {};
-                            const existing = next[selectedQuadraId][dataStr][hour.toString()] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: hour, quadraId: selectedQuadraId };
-                            next[selectedQuadraId][dataStr][hour.toString()] = { ...existing, disponivel: !isAvailable };
-                            return next;
-                          });
-                          setHasChanges(true);
-                        }}>
-                          {isAvailable ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                        </Button>
-                        {slot && !isReserved && (
-                          <Button variant="destructive" size="icon" className="w-8 h-8 rounded-md" onClick={async () => {
-                            if(confirm("Deseja apagar/limpar este horário?")) {
-                              if (slot.id) {
-                                try {
-                                  await api.horarios.deleteSlot(slot.id);
-                                  toast.success("Horário apagado!");
-                                } catch(e:any) {
-                                  return toast.error(e.message || "Erro ao apagar");
-                                }
-                              }
-                              // Limpar localmente também
-                              setSchedule(prev => {
-                                const next = { ...prev };
-                                next[selectedQuadraId] = { ...next[selectedQuadraId] };
-                                next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
-                                delete next[selectedQuadraId][dataStr][hour.toString()];
-                                return next;
-                              });
-                              if (!slot.id) {
-                                toast.success("Horário limpo!");
-                              } else {
-                                fetchHorarios(selectedQuadraId);
-                              }
-                            }
-                          }}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
+            {HORAS.map(hourStr => {
+              const slot = selectedMap[hourStr];
+              const isAvailable = slot?.disponivel ?? false;
+              const isReserved = slot?.reservas && (slot.reservas.length > 0);
+              
+              const [h, m] = hourStr.split(":").map(Number);
+              const duracao = slot?.duracao || 60;
+              const endTotalMins = (h * 60) + m + duracao;
+              const endStr = `${String(Math.floor(endTotalMins / 60) % 24).padStart(2, "0")}:${String(endTotalMins % 60).padStart(2, "0")}`;
+
+              return (
+                <div key={hourStr} className={cn("flex items-center gap-4 p-4 rounded-xl border transition-all", 
+                  batchMode ? "ml-4" : "",
+                  isReserved ? "bg-orange-50 border-orange-200" : isAvailable ? "bg-emerald-50/50 border-emerald-100" : "bg-gray-50 border-gray-200"
+                )}>
+                  {batchMode && (
+                    <div className="mt-1">
+                      <Checkbox checked={!!batchSelected[hourStr]} onCheckedChange={c => toggleBatch(hourStr, !!c)} disabled={isReserved} />
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                  <div className="flex items-center gap-2 flex-1">
+                    <Clock className={`w-4 h-4 ${isReserved ? 'text-orange-600' : isAvailable ? 'text-emerald-600' : 'text-gray-400'}`} />
+                    <span className="font-semibold text-lg text-[#000273]">{hourStr} - {endStr}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-700 w-32">{slot?.esporte || "-"}</div>
+                  <div className="flex items-center gap-1 text-sm w-32">
+                    {slot?.preco ? <><DollarSign className="w-4 h-4 text-gray-400" /><span className="font-semibold text-[#000273]">R$ {slot.preco}</span></> : <span className="text-gray-400">-</span>}
+                  </div>
+                  <div className="w-24">{statusBadge(slot)}</div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => {
+                      setIsNewSlot(false);
+                      setEditorHourStart(hourStr);
+                      setEditorHourEnd(endStr);
+                      setEditorStatus(isAvailable ? "disponivel" : "bloqueado");
+                      setEditorSport(slot?.esporte);
+                      setEditorDuration(slot?.duracao || 60);
+                      setEditorPrice(slot?.preco);
+                      setEditorOpen(true);
+                    }}>
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" disabled={isReserved} onClick={async () => {
+                      if (!selectedQuadraId) return;
+                      const existing = schedule[selectedQuadraId][dataStr][hourStr] || { disponivel: true, duracao: 60, intervalo: 10, data: dataStr, horaInicio: hourStr, quadraId: selectedQuadraId };
+                      const payload = { ...existing, disponivel: !isAvailable };
+                      try {
+                        const res = await api.horarios.saveLote([payload]);
+                        setSchedule(prev => {
+                          const n = { ...prev };
+                          n[selectedQuadraId] = { ...n[selectedQuadraId] };
+                          n[selectedQuadraId][dataStr] = { ...n[selectedQuadraId][dataStr] };
+                          n[selectedQuadraId][dataStr][hourStr] = res[0] || payload;
+                          return n;
+                        });
+                        setHasChanges(true);
+                      } catch(e:any) { toast.error(e.message); }
+                    }}>
+                      {isAvailable ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                    </Button>
+                    {!isReserved && (
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteSlot(hourStr)}><Trash2 className="w-4 h-4" /></Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
+          )}
         </div>
       </div>
+    </div>
 
       {batchMode && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-white border rounded-full px-6 py-3 shadow-xl flex items-center gap-4">
@@ -516,27 +612,47 @@ export function Disponibilidade() {
         </div>
       )}
 
-      {/* Dialog do Editor */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Editar {editorHour !== null ? `${String(editorHour).padStart(2, "0")}:00` : ""}</DialogTitle></DialogHeader>
-          <div className="py-4 space-y-4">
+          <DialogHeader><DialogTitle>{isNewSlot ? "Novo Horário" : "Editar Horário"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Início</div>
+                <input type="time" value={editorHourStart} onChange={e => setEditorHourStart(e.target.value)} disabled={!isNewSlot} className="w-full border p-2 rounded disabled:opacity-50 disabled:bg-gray-100" />
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Fim</div>
+                <input type="time" value={editorHourEnd} onChange={e => setEditorHourEnd(e.target.value)} disabled={!isNewSlot} className="w-full border p-2 rounded disabled:opacity-50 disabled:bg-gray-100" />
+              </div>
+            </div>
             <div className="space-y-2">
               <div className="text-sm font-medium">Status</div>
-              <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as typeof editorStatus)} className="w-full">
-                <ToggleGroupItem value="disponivel" variant="outline" className="flex-1">Disponível</ToggleGroupItem>
-                <ToggleGroupItem value="bloqueado" variant="outline" className="flex-1">Bloqueado</ToggleGroupItem>
+              <ToggleGroup type="single" value={editorStatus} onValueChange={v => v && setEditorStatus(v as any)} className="w-full">
+                <ToggleGroupItem value="disponivel" className="flex-1">Disponível</ToggleGroupItem>
+                <ToggleGroupItem value="bloqueado" className="flex-1">Bloqueado</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <div className="text-sm font-medium">Esporte Padrão</div>
-                <Select value={editorSport || ""} onValueChange={v => setEditorSport(v || undefined)}>
+                <Select value={editorSport || "none"} onValueChange={v => setEditorSport(v === "none" ? undefined : v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    {(quadras.find(q => q.id === selectedQuadraId)?.esportes || []).map(e => (
-                      <SelectItem key={e} value={e}>{e}</SelectItem>
-                    ))}
+                    <SelectItem value="none" className="hidden">Selecione</SelectItem>
+                    {(() => {
+                      const q = quadras.find(q => q.id === selectedQuadraId);
+                      let esportesList: string[] = [];
+                      if (Array.isArray(q?.esportes)) {
+                        esportesList = q!.esportes;
+                      } else if (typeof q?.esportes === "string") {
+                        try { esportesList = JSON.parse(q!.esportes); } 
+                        catch { esportesList = q!.esportes.split(",").map(s => s.trim()); }
+                      }
+                      return esportesList.map((e: string) => (
+                        <SelectItem key={e} value={e}>{e}</SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
@@ -547,7 +663,11 @@ export function Disponibilidade() {
             </div>
           </div>
           <DialogFooter className="flex items-center justify-between mt-4">
-            <Button variant="destructive" onClick={handleDeleteSlot}>Apagar / Limpar</Button>
+            {!isNewSlot ? (
+              <Button variant="destructive" onClick={() => handleDeleteSlot(editorHourStart)}>Apagar Horário</Button>
+            ) : (
+              <div />
+            )}
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button>
               <Button onClick={saveEditor}><Save className="w-4 h-4 mr-1" /> Salvar</Button>
@@ -565,9 +685,55 @@ export function Disponibilidade() {
                 <label className="text-sm font-medium">Nome da Quadra</label>
                 <Input placeholder="Ex: Quadra 1" value={novaQuadraNome} onChange={e => setNovaQuadraNome(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Esportes (separados por vírgula)</label>
-                <Input placeholder="Ex: Vôlei, Beach Tennis" onChange={e => setNovaQuadraEsportes(e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Adicionar Esporte</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Ex: Futebol" 
+                      id="input-esporte-global"
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val) {
+                            const formatted = val.charAt(0).toUpperCase() + val.slice(1);
+                            if (!novaQuadraEsportes.includes(formatted)) {
+                              setNovaQuadraEsportes(prev => [...prev, formatted]);
+                            }
+                            e.currentTarget.value = "";
+                          }
+                        }
+                      }} 
+                    />
+                    <Button variant="outline" onClick={() => {
+                      const input = document.getElementById("input-esporte-global") as HTMLInputElement;
+                      if (input) {
+                        const val = input.value.trim();
+                        if (val) {
+                          const formatted = val.charAt(0).toUpperCase() + val.slice(1);
+                          if (!novaQuadraEsportes.includes(formatted)) {
+                            setNovaQuadraEsportes(prev => [...prev, formatted]);
+                          }
+                          input.value = "";
+                        }
+                      }
+                    }}><Plus className="w-4 h-4 mr-1"/> Adicionar</Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Digite o nome do esporte e pressione Enter.</p>
+                </div>
+                {novaQuadraEsportes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
+                    {novaQuadraEsportes.map(e => (
+                      <div key={e} className="flex items-center gap-1 bg-white border px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+                        <span className="text-[#000273]">{e}</span>
+                        <button onClick={() => setNovaQuadraEsportes(prev => prev.filter(x => x !== e))} className="ml-1 text-gray-400 hover:text-red-500 transition-colors">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Descrição (Opcional)</label>

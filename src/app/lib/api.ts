@@ -47,7 +47,7 @@ export const api = {
   arena: {
     dashboard: () => request('GET', '/arena/dashboard'),
     all: () => request('GET', '/arena'),
-    updateConfig: (data: { horaAbertura: string; horaFechamento: string }) => request('PUT', '/arena/config', data),
+    updateConfig: (data: { horaAbertura: string; horaFechamento: string; esportes?: string[] }) => request('PUT', '/arena/config', data),
   },
 
   atleta: {
