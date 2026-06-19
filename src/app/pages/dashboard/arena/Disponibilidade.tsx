@@ -64,6 +64,7 @@ export function Disponibilidade() {
   // Arena configs
   const [horaAbertura, setHoraAbertura] = useState("08:00");
   const [horaFechamento, setHoraFechamento] = useState("22:00");
+  const [arenaEsportes, setArenaEsportes] = useState<string[]>([]);
 
   const [loadingQuadras, setLoadingQuadras] = useState(true);
   const [loadingHorarios, setLoadingHorarios] = useState(false);
@@ -93,6 +94,7 @@ export function Disponibilidade() {
     api.arena.dashboard().then((data: any) => {
       if (data.horaAbertura) setHoraAbertura(data.horaAbertura);
       if (data.horaFechamento) setHoraFechamento(data.horaFechamento);
+      if (data.esportes && Array.isArray(data.esportes)) setArenaEsportes(data.esportes);
     });
 
     api.quadras.minhas()
@@ -641,15 +643,8 @@ export function Disponibilidade() {
                   <SelectContent>
                     <SelectItem value="none" className="hidden">Selecione</SelectItem>
                     {(() => {
-                      const q = quadras.find(q => q.id === selectedQuadraId);
-                      let esportesList: string[] = [];
-                      if (Array.isArray(q?.esportes)) {
-                        esportesList = q!.esportes;
-                      } else if (typeof q?.esportes === "string") {
-                        try { esportesList = JSON.parse(q!.esportes); } 
-                        catch { esportesList = q!.esportes.split(",").map(s => s.trim()); }
-                      }
-                      return esportesList.map((e: string) => (
+                      let esportesList = arenaEsportes.length > 0 ? arenaEsportes : ESPORTES;
+                        return esportesList.map((e: string) => (
                         <SelectItem key={e} value={e}>{e}</SelectItem>
                       ));
                     })()}
