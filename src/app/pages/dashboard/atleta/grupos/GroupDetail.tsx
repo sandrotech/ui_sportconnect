@@ -63,6 +63,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [viewingProfileMember, setViewingProfileMember] = useState<GroupMember | null>(null);
 
   const showFeedback = (type: 'success' | 'error', msg: string) => {
     setFeedback({ type, msg });
@@ -369,7 +370,15 @@ export function GroupDetail({ groupId, onBack }: Props) {
                     <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-sm font-bold text-amber-800">
                       {req.user.name[0].toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-800">{req.user.name}</span>
+                    <div>
+                      <span className="text-sm font-medium text-gray-800">{req.user.name}</span>
+                      <button
+                        onClick={() => setViewingProfileMember(req)}
+                        className="ml-2 px-2 py-0.5 text-[11px] font-semibold text-[#004ef9] hover:bg-[#004ef9]/10 rounded-md transition-colors"
+                      >
+                        🔍 Ver perfil
+                      </button>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -486,6 +495,90 @@ export function GroupDetail({ groupId, onBack }: Props) {
                 <span className="font-medium text-gray-800">{item.value}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Visualizar Perfil do Solicitante */}
+      {viewingProfileMember && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          onClick={() => setViewingProfileMember(null)}
+        >
+          <div 
+            className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl p-6 space-y-6 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#004ef9]/10 to-[#ff4b00]/10 flex items-center justify-center text-2xl font-bold text-[#000273] flex-shrink-0 border border-black/5">
+                {viewingProfileMember.user.avatar ? (
+                  <img src={viewingProfileMember.user.avatar} alt={viewingProfileMember.user.name} className="w-full h-full rounded-full object-cover" />
+                ) : viewingProfileMember.user.name[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg text-gray-900 truncate">{viewingProfileMember.user.name}</h3>
+                <p className="text-sm text-gray-500 truncate">{viewingProfileMember.user.atleta?.apelido ? `@${viewingProfileMember.user.atleta.apelido}` : 'Sem apelido'}</p>
+              </div>
+            </div>
+
+            {/* Profile Info Details */}
+            <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Nível</span>
+                <span className="font-medium text-gray-800">{viewingProfileMember.user.atleta?.nivel || 'Não informado'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Esportes</span>
+                <span className="font-medium text-gray-800">{viewingProfileMember.user.atleta?.esportes || 'Não informado'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Localização</span>
+                <span className="font-medium text-gray-800">{viewingProfileMember.user.atleta?.localizacao || 'Não informada'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Ranking ELO</span>
+                <span className="font-semibold text-[#004ef9]">⚡ {viewingProfileMember.user.atleta?.ranking ?? 0} ELO</span>
+              </div>
+              <div className="border-t border-gray-200/60 my-2 pt-2" />
+              <div className="flex justify-between">
+                <span className="text-gray-500">E-mail</span>
+                <span className="font-medium text-gray-800 truncate max-w-[200px]">{viewingProfileMember.user.email || 'Não informado'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Telefone</span>
+                <span className="font-medium text-gray-800">{viewingProfileMember.user.atleta?.telefone || 'Não informado'}</span>
+              </div>
+            </div>
+
+            {/* Actions inside profile modal */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  handleApprove(viewingProfileMember.id);
+                  setViewingProfileMember(null);
+                }}
+                className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors shadow-sm text-sm"
+              >
+                ✓ Aprovar
+              </button>
+              <button
+                onClick={() => {
+                  handleReject(viewingProfileMember.id);
+                  setViewingProfileMember(null);
+                }}
+                className="flex-1 py-3 bg-white border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors text-sm"
+              >
+                ✕ Recusar
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setViewingProfileMember(null)}
+              className="absolute top-2 right-4 text-gray-400 hover:text-gray-600 text-2xl font-semibold focus:outline-none"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
