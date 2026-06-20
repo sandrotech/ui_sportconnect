@@ -369,7 +369,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-gray-100/80 backdrop-blur-sm rounded-xl p-1 border border-black/5 shadow-inner">
         {([
           { id: 'jogos', label: '⚽ Jogos' },
           { id: 'membros', label: '👥 Membros' },
@@ -378,8 +378,10 @@ export function GroupDetail({ groupId, onBack }: Props) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === t.id ? 'bg-white text-[#000273] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
+              tab === t.id 
+                ? 'bg-white text-[#000273] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] ring-1 ring-black/5' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
           >
             {t.label}
@@ -462,7 +464,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
               const isMe = member.user.id === user?.id;
 
               return (
-                <div key={member.id} className="flex items-center gap-3 px-5 py-4">
+                <div key={member.id} className="flex items-center gap-3 px-5 py-4 hover:bg-gray-50/80 transition-colors group">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#004ef9]/10 to-[#ff4b00]/10 flex items-center justify-center text-base font-bold text-[#000273] flex-shrink-0">
                     {member.user.avatar ? (
                       <img src={member.user.avatar} alt={member.user.name} className="w-full h-full rounded-full object-cover" />
@@ -482,7 +484,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
                           e.stopPropagation();
                           setActiveMemberActionId(activeMemberActionId === member.id ? null : member.id);
                         }}
-                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+                        className="p-2 text-gray-400 hover:text-[#004ef9] hover:bg-[#004ef9]/10 active:scale-90 rounded-xl transition-all"
                         title="Gerenciar membro"
                       >
                         ⚙️
@@ -498,14 +500,14 @@ export function GroupDetail({ groupId, onBack }: Props) {
                             }}
                           />
                           <div 
-                            className="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 animate-scale-up"
+                            className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_16px_40px_-10px_rgba(0,0,0,0.3)] border border-white/60 py-2 z-20 animate-scale-up overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {/* Promote / Demote (Owner only) */}
                             {myRole === 'OWNER' && (
                               <button
                                 onClick={() => handlePromote(member.id, member.role === 'CO_OWNER' ? 'MEMBER' : 'CO_OWNER')}
-                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-900/5 hover:text-gray-900 active:bg-gray-900/10 transition-colors"
                               >
                                 {member.role === 'CO_OWNER' ? 'Rebaixar a Membro' : 'Promover a Co-dono'}
                               </button>
@@ -514,7 +516,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
                             {/* Remove member */}
                             <button
                               onClick={() => handleRemoveMemberAction(member.id)}
-                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-900/5 hover:text-gray-900 active:bg-gray-900/10 transition-colors"
                             >
                               Remover do grupo
                             </button>
@@ -522,7 +524,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
                             {/* Ban member */}
                             <button
                               onClick={() => handleBanMember(member.id)}
-                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100 transition-colors"
                             >
                               Banir/Punir membro
                             </button>
@@ -602,11 +604,11 @@ export function GroupDetail({ groupId, onBack }: Props) {
       {/* Modal Visualizar Perfil do Solicitante */}
       {viewingProfileMember && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
           onClick={() => setViewingProfileMember(null)}
         >
           <div 
-            className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl p-6 space-y-6 animate-scale-up"
+            className="relative w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl overflow-hidden shadow-[0_24px_60px_-15px_rgba(0,0,0,0.4)] border border-white/40 p-6 space-y-6 animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -658,7 +660,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
                   handleApprove(viewingProfileMember.id);
                   setViewingProfileMember(null);
                 }}
-                className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors shadow-sm text-sm"
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold hover:shadow-[0_8px_20px_-8px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all text-sm"
               >
                 ✓ Aprovar
               </button>
@@ -667,7 +669,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
                   handleReject(viewingProfileMember.id);
                   setViewingProfileMember(null);
                 }}
-                className="flex-1 py-3 bg-white border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors text-sm"
+                className="flex-1 py-3 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 active:scale-[0.98] transition-all text-sm"
               >
                 ✕ Recusar
               </button>

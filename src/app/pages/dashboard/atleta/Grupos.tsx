@@ -69,11 +69,11 @@ export function Grupos() {
       {/* Modal detalhe do grupo */}
       {selectedGroupId && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300"
           onClick={handleBack}
         >
           <div 
-            className="relative w-full max-w-4xl bg-gray-50 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+            className="relative w-full max-w-4xl bg-white/95 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_24px_60px_-15px_rgba(0,0,0,0.4)] border border-white/30 max-h-[90vh] flex flex-col animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Scrollable content container */}
