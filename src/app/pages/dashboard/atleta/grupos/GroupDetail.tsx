@@ -201,6 +201,20 @@ export function GroupDetail({ groupId, onBack }: Props) {
     }
   };
 
+  const handleJoin = async () => {
+    try {
+      const res = await fetch(`${API()}/groups/${groupId}/join`, {
+        method: 'POST', headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showFeedback('success', group?.visibility === 'PUBLIC' ? 'Você entrou no grupo!' : 'Solicitação enviada!');
+      fetchGroup();
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao solicitar entrada.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -267,10 +281,21 @@ export function GroupDetail({ groupId, onBack }: Props) {
               <span>{approvedMembers.length}/{group.maxMembers} membros</span>
             </p>
           </div>
-          {myRole && (
+          {myRole ? (
             <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/20 backdrop-blur-md text-white border border-white/20">
               {ROLE_LABELS[myRole]?.badge} {ROLE_LABELS[myRole]?.label}
             </span>
+          ) : group?.members.some((m) => m.user.id === user?.id && m.status === 'PENDING') ? (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/80 backdrop-blur-md text-white border border-amber-500/20">
+               ✓ Solicitado
+            </span>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleJoin(); }}
+              className="px-4 py-2 bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white text-sm font-medium rounded-xl hover:shadow-md transition-all border border-white/10"
+            >
+              {group?.visibility === 'PUBLIC' ? 'Entrar no Grupo' : 'Solicitar Entrada'}
+            </button>
           )}
         </div>
       </div>

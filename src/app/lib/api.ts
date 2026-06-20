@@ -54,4 +54,11 @@ export const api = {
     updateProfile: (data: FormData) => request('PUT', '/atleta/me', data, true),
     findByCpf: (cpf: string) => request('GET', `/atleta/cpf/${cpf}`),
   },
+
+  wallet: {
+    balance: () => request('GET', '/wallet/balance'),
+    transactions: (limit = 20, offset = 0) => request('GET', `/wallet/transactions?limit=${limit}&offset=${offset}`),
+    packages: () => request('GET', '/wallet/packages'),
+    purchase: (amount: number) => request('POST', '/wallet/purchase', { amount }),
+  },
 };

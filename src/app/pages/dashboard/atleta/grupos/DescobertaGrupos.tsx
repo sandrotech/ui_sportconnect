@@ -182,7 +182,11 @@ export function DescobertaGrupos({ onSelectGroup }: Props) {
             const requested = requestedIds.has(group.id);
 
             return (
-              <div key={group.id} className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-black/5 flex flex-col">
+              <div 
+                key={group.id} 
+                className="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-black/5 flex flex-col cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+                onClick={() => onSelectGroup && onSelectGroup(group.id)}
+              >
                 {/* Header */}
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#004ef9]/10 to-[#ff4b00]/10 flex items-center justify-center text-2xl flex-shrink-0 border border-black/5">
@@ -226,7 +230,10 @@ export function DescobertaGrupos({ onSelectGroup }: Props) {
                     </span>
                   ) : (
                     <button
-                      onClick={() => handleJoin(group.id, group.visibility)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleJoin(group.id, group.visibility);
+                      }}
                       className="px-4 py-1.5 bg-gradient-to-r from-[#004ef9] to-[#0066ff] text-white text-sm font-medium rounded-lg hover:shadow-md transition-all"
                     >
                       {group.visibility === 'PUBLIC' ? 'Entrar' : 'Solicitar'}

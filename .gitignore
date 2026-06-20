@@ -5,3 +5,7 @@ node_modules/.vite/
 .env.local 
 /sportconnect-api/
 /api_sportconnect/
+dist/
+build/
+coverage/
+.vscode/
