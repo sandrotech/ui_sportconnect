@@ -333,7 +333,11 @@ export function Cadastro() {
                     type={showConfirm ? "text" : "password"}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
-                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none transition-all"
+                    className={`w-full pl-4 pr-10 py-3 rounded-xl border outline-none transition-all ${
+                      confirm && confirm !== password
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-500/20 focus:border-red-500'
+                        : 'border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent'
+                    }`}
                     placeholder="••••••••"
                     required
                   />
@@ -345,6 +349,9 @@ export function Cadastro() {
                     {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {confirm && confirm !== password && (
+                  <p className="text-xs text-red-500 mt-1">As senhas não coincidem</p>
+                )}
               </div>
             </div>
 
