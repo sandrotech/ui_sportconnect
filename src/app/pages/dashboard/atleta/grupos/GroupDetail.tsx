@@ -64,6 +64,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [viewingProfileMember, setViewingProfileMember] = useState<GroupMember | null>(null);
+  const [activeMemberActionId, setActiveMemberActionId] = useState<number | null>(null);
 
   const showFeedback = (type: 'success' | 'error', msg: string) => {
     setFeedback({ type, msg });
@@ -176,6 +177,49 @@ export function GroupDetail({ groupId, onBack }: Props) {
       showFeedback('error', err.message);
     }
     setActionLoading(null);
+  };
+
+  const handlePromote = async (memberId: number, targetRole: string) => {
+    setActionLoading(memberId);
+    try {
+      const res = await fetch(`${API()}/groups/${groupId}/members/${memberId}/promote`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ role: targetRole }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      showFeedback('success', targetRole === 'CO_OWNER' ? 'Membro promovido a Co-dono!' : 'Membro rebaixado a Membro comum.');
+      fetchGroup();
+    } catch (err: any) {
+      showFeedback('error', err.message);
+    } finally {
+      setActionLoading(null);
+      setActiveMemberActionId(null);
+    }
+  };
+
+  const handleBanMember = async (memberId: number) => {
+    if (!confirm('Tem certeza que deseja banir este membro? Ele não poderá mais solicitar entrada no grupo.')) return;
+    setActionLoading(memberId);
+    try {
+      const res = await fetch(`${API()}/groups/${groupId}/members/${memberId}/ban`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      showFeedback('success', 'Membro banido do grupo.');
+      fetchGroup();
+    } catch (err: any) {
+      showFeedback('error', err.message);
+    } finally {
+      setActionLoading(null);
+      setActiveMemberActionId(null);
+    }
+  };
+
+  const handleRemoveMemberAction = async (memberId: number) => {
+    await handleRemoveMember(memberId);
+    setActiveMemberActionId(null);
   };
 
   const handleGenerateInvite = async () => {
@@ -432,14 +476,60 @@ export function GroupDetail({ groupId, onBack }: Props) {
                     <span className="text-xs text-gray-500">{roleCfg.badge} {roleCfg.label}</span>
                   </div>
                   {isAdmin && !isMe && (
-                    <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      disabled={actionLoading === member.id}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Remover membro"
-                    >
-                      🗑
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMemberActionId(activeMemberActionId === member.id ? null : member.id);
+                        }}
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+                        title="Gerenciar membro"
+                      >
+                        ⚙️
+                      </button>
+
+                      {activeMemberActionId === member.id && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-10" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMemberActionId(null);
+                            }}
+                          />
+                          <div 
+                            className="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 animate-scale-up"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Promote / Demote (Owner only) */}
+                            {myRole === 'OWNER' && (
+                              <button
+                                onClick={() => handlePromote(member.id, member.role === 'CO_OWNER' ? 'MEMBER' : 'CO_OWNER')}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                {member.role === 'CO_OWNER' ? 'Rebaixar a Membro' : 'Promover a Co-dono'}
+                              </button>
+                            )}
+
+                            {/* Remove member */}
+                            <button
+                              onClick={() => handleRemoveMemberAction(member.id)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              Remover do grupo
+                            </button>
+
+                            {/* Ban member */}
+                            <button
+                              onClick={() => handleBanMember(member.id)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
+                            >
+                              Banir/Punir membro
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               );
