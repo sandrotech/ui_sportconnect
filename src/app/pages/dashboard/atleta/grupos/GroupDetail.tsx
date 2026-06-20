@@ -121,6 +121,16 @@ export function GroupDetail({ groupId, onBack }: Props) {
       .catch(console.error);
   }, [isAdmin, group]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && viewingProfileMember) {
+        setViewingProfileMember(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewingProfileMember]);
+
   const handleApprove = async (memberId: number) => {
     setActionLoading(memberId);
     try {

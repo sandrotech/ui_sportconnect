@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MeusGrupos } from './grupos/MeusGrupos';
 import { DescobertaGrupos } from './grupos/DescobertaGrupos';
 import { CreateGroupModal } from './grupos/CreateGroupModal';
@@ -23,6 +23,23 @@ export function Grupos() {
     setRefreshKey((k) => k + 1);
     handleSelectGroup(id);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const isChildModalOpen = document.querySelector('.z-\\[60\\]');
+        if (isChildModalOpen) return;
+
+        if (selectedGroupId) {
+          handleBack();
+        } else if (showCreate) {
+          setShowCreate(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedGroupId, showCreate]);
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
