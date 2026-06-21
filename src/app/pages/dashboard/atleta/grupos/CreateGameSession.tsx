@@ -96,8 +96,8 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1 min-h-0">
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">{error}</div>
             )}
@@ -115,7 +115,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
             </div>
 
             {/* Data e Hora */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Data *</label>
                 <input
@@ -151,7 +151,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
             </div>
 
             {/* Vagas */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Vagas de titulares</label>
                 <input type="number" min={1} max={50} value={form.maxStarters}
@@ -167,7 +167,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
             </div>
 
             {/* Fichas + Prazo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">🎫 Fichas por vaga</label>
                 <input type="number" min={1} max={10} value={form.fichasPerPlayer}
@@ -186,7 +186,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
             {/* Visibilidade */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Visibilidade do jogo</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
                   { value: 'GROUP_ONLY', label: '🔒 Só o grupo', desc: 'Membros do grupo' },
                   { value: 'PUBLIC', label: '🌐 Aberto', desc: 'Qualquer atleta' },
@@ -235,7 +235,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
           </div>
 
           {/* Actions */}
-          <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex-shrink-0 flex flex-col-reverse sm:flex-row gap-3 rounded-b-3xl">
+          <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex-shrink-0 flex flex-col-reverse md:flex-row gap-3 rounded-b-3xl">
             <button type="button" onClick={onClose}
               className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-all">
               Cancelar
