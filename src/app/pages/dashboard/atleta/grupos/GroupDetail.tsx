@@ -415,7 +415,7 @@ export function GroupDetail({ groupId, onBack }: Props) {
 
       {/* Tab: Membros */}
       {tab === 'membros' && (
-        <div className="space-y-4">
+        <div className={`space-y-4 transition-all duration-300 ${activeMemberActionId ? 'pb-40' : 'pb-4'}`}>
           {/* Solicitações pendentes */}
           {isAdmin && pendingRequests.length > 0 && (
             <div className="bg-amber-50 rounded-2xl p-4 space-y-3">
