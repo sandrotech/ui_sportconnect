@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const API = () => (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const authHeaders = () => ({
@@ -82,11 +83,11 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
     setLoading(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-bold text-xl text-[#000273]">⚽ Nova Lista de Jogo</h2>
@@ -97,7 +98,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1 min-h-0">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 overflow-y-auto flex-1 min-h-0">
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">{error}</div>
             )}
@@ -235,7 +236,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
           </div>
 
           {/* Actions */}
-          <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex-shrink-0 flex flex-col-reverse md:flex-row gap-3 rounded-b-3xl">
+          <div className="bg-gray-50/50 px-4 sm:px-6 py-3.5 sm:py-4 border-t border-gray-100 flex-shrink-0 flex flex-col-reverse md:flex-row gap-3 rounded-b-3xl">
             <button type="button" onClick={onClose}
               className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-all">
               Cancelar
@@ -247,6 +248,7 @@ export function CreateGameSession({ groupId, onCreated, onClose }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
