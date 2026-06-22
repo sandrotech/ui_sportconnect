@@ -966,6 +966,9 @@ export function Disponibilidade() {
                   />
                 </div>
               </div>
+              <p className="text-xs text-gray-500 italic mt-[-8px]">
+                * Horários iniciais sugeridos conforme a abertura e fechamento configurados para a arena.
+              </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
