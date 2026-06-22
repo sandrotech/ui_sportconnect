@@ -207,16 +207,32 @@ export function Disponibilidade() {
 
   async function confirmarGerarGrade() {
     if (!selectedQuadraId) return;
-    const sHour = parseInt(gerarHoraInicio.split(":")[0]) || 8;
-    const eHour = parseInt(gerarHoraFim.split(":")[0]) || 22;
 
-    if (sHour >= eHour) {
-      toast.error("A hora de início deve ser menor que a hora de término!");
+    if (gerarHoraInicio === gerarHoraFim) {
+      toast.error("As horas de início e fim não podem ser iguais!");
       return;
     }
 
+    const sHour = parseInt(gerarHoraInicio.split(":")[0]) || 8;
+    const eHour = parseInt(gerarHoraFim.split(":")[0]) || 22;
+
+    const hoursToGenerate: number[] = [];
+    if (sHour < eHour) {
+      for (let i = sHour; i < eHour; i++) {
+        hoursToGenerate.push(i);
+      }
+    } else {
+      // Horários do Madrugadão (ex: das 22:00 às 03:00)
+      for (let i = sHour; i < 24; i++) {
+        hoursToGenerate.push(i);
+      }
+      for (let i = 0; i < eHour; i++) {
+        hoursToGenerate.push(i);
+      }
+    }
+
     const newSlots: HorarioSlot[] = [];
-    for(let i = sHour; i < eHour; i++) {
+    for (const i of hoursToGenerate) {
       const hStr = `${String(i).padStart(2, '0')}:00`;
       if (!selectedMap[hStr]) {
         newSlots.push({
@@ -273,13 +289,17 @@ export function Disponibilidade() {
   async function saveEditor() {
     if (!selectedQuadraId || !editorHourStart || !editorHourEnd) return;
     
+    if (editorHourStart === editorHourEnd) {
+      toast.error("As horas de início e fim não podem ser iguais!");
+      return;
+    }
+
     const [sH, sM] = editorHourStart.split(":").map(Number);
     const [eH, eM] = editorHourEnd.split(":").map(Number);
-    const duracao = (eH * 60 + eM) - (sH * 60 + sM);
+    let duracao = (eH * 60 + eM) - (sH * 60 + sM);
     
     if (duracao <= 0) {
-      toast.error("A hora de fim deve ser depois da hora de início!");
-      return;
+      duracao += 24 * 60; // Suporta horários que viram a noite/madrugada
     }
 
     const existingSlot = selectedMap[editorHourStart];
