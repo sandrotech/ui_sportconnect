@@ -118,6 +118,13 @@ export function Disponibilidade() {
   const [replicationOverwrite, setReplicationOverwrite] = useState(false);
 
 
+  // Novos estados para o modal de Geração de Grade Padrão
+  const [gerarGradeOpen, setGerarGradeOpen] = useState(false);
+  const [gerarHoraInicio, setGerarHoraInicio] = useState("08:00");
+  const [gerarHoraFim, setGerarHoraFim] = useState("22:00");
+  const [gerarEsporte, setGerarEsporte] = useState<string | undefined>(undefined);
+  const [gerarPreco, setGerarPreco] = useState<number | undefined>(undefined);
+
   const dataStr = format(selectedDate, "yyyy-MM-dd");
 
   useEffect(() => {
@@ -197,10 +204,16 @@ export function Disponibilidade() {
     setEditorOpen(true);
   }
 
-  async function gerarGradePadrao() {
+  async function confirmarGerarGrade() {
     if (!selectedQuadraId) return;
-    const sHour = parseInt(horaAbertura.split(":")[0]) || 8;
-    const eHour = parseInt(horaFechamento.split(":")[0]) || 22;
+    const sHour = parseInt(gerarHoraInicio.split(":")[0]) || 8;
+    const eHour = parseInt(gerarHoraFim.split(":")[0]) || 22;
+
+    if (sHour >= eHour) {
+      toast.error("A hora de início deve ser menor que a hora de término!");
+      return;
+    }
+
     const newSlots: HorarioSlot[] = [];
     for(let i = sHour; i < eHour; i++) {
       const hStr = `${String(i).padStart(2, '0')}:00`;
@@ -211,10 +224,19 @@ export function Disponibilidade() {
           horaInicio: i,
           disponivel: true,
           duracao: 60,
-          intervalo: 10
+          intervalo: 10,
+          preco: gerarPreco,
+          esporte: gerarEsporte
         });
       }
     }
+
+    if (newSlots.length === 0) {
+      toast.info("Todos os horários já estão configurados para este intervalo.");
+      setGerarGradeOpen(false);
+      return;
+    }
+
     try {
       const res = await api.horarios.saveLote(newSlots);
       setSchedule(prev => {
@@ -227,6 +249,7 @@ export function Disponibilidade() {
         });
         return next;
       });
+      setGerarGradeOpen(false);
       toast.success("Grade gerada!");
     } catch { toast.error("Erro ao gerar grade"); }
   }
@@ -604,7 +627,13 @@ export function Disponibilidade() {
                 <CalendarIcon className="w-12 h-12 mb-4 text-gray-300" />
                 <p>Nenhum horário configurado neste dia.</p>
                 <div className="flex gap-3 mt-4">
-                  <Button onClick={gerarGradePadrao}>Gerar Grade Padrão</Button>
+                  <Button onClick={() => {
+                    setGerarHoraInicio(horaAbertura || "08:00");
+                    setGerarHoraFim(horaFechamento || "22:00");
+                    setGerarEsporte(undefined);
+                    setGerarPreco(undefined);
+                    setGerarGradeOpen(true);
+                  }}>Gerar Grade Padrão</Button>
                   <Button variant="outline" onClick={openEditorNovo}>Adicionar Horário</Button>
                 </div>
               </div>
@@ -886,6 +915,71 @@ export function Disponibilidade() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setReplicationModalOpen(false)}>Cancelar</Button>
               <Button onClick={applyDynamicReplication}><Copy className="w-4 h-4 mr-2"/> Replicar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Geração de Grade Padrão */}
+        <Dialog open={gerarGradeOpen} onOpenChange={setGerarGradeOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Gerar Grade Padrão</DialogTitle>
+              <DialogDescription>
+                Defina o intervalo e os valores padrão para gerar os horários automaticamente neste dia.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Início</div>
+                  <input 
+                    type="time" 
+                    value={gerarHoraInicio} 
+                    onChange={e => setGerarHoraInicio(e.target.value)} 
+                    className="w-full border p-2 rounded" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Fim</div>
+                  <input 
+                    type="time" 
+                    value={gerarHoraFim} 
+                    onChange={e => setGerarHoraFim(e.target.value)} 
+                    className="w-full border p-2 rounded" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Esporte Padrão</div>
+                  <Select value={gerarEsporte || "none"} onValueChange={v => setGerarEsporte(v === "none" ? undefined : v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {(() => {
+                        let esportesList = arenaEsportes.length > 0 ? arenaEsportes : ESPORTES;
+                        return esportesList.map((e: string) => (
+                          <SelectItem key={e} value={e}>{e}</SelectItem>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Preço Padrão (R$)</div>
+                  <Input 
+                    type="number" 
+                    value={gerarPreco ?? ""} 
+                    onChange={e => setGerarPreco(e.target.value ? Number(e.target.value) : undefined)} 
+                    placeholder="Ex: 80"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={() => setGerarGradeOpen(false)}>Cancelar</Button>
+              <Button onClick={confirmarGerarGrade}><Plus className="w-4 h-4 mr-1" /> Gerar Grade</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
