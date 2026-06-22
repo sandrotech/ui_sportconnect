@@ -5,6 +5,7 @@ import { Toaster } from './components/ui/sonner';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { RouteChangeLoader } from './components/RouteChangeLoader';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { motion } from 'framer-motion';
 import { DollarSign, Users, FileBarChart, Settings, Calendar, Mail, Phone, MapPin, BookOpen, ShoppingBag, Star, Shield, Briefcase } from 'lucide-react';
 import { Home } from './pages/Home';
@@ -1114,6 +1115,7 @@ export default function App() {
             <Route path="profissionais" element={<HubProfissionais />} />
           </Route>
         </Routes>
+        <PwaInstallPrompt />
       </AuthProvider>
     </BrowserRouter>
   );
