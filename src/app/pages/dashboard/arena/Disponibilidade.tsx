@@ -288,7 +288,11 @@ export function Disponibilidade() {
       await api.horarios.deleteSlot(slot.id, force);
       setSchedule(prev => {
         const next = { ...prev };
-        delete next[selectedQuadraId][dataStr][hourStr];
+        if (next[selectedQuadraId] && next[selectedQuadraId][dataStr]) {
+          next[selectedQuadraId] = { ...next[selectedQuadraId] };
+          next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+          delete next[selectedQuadraId][dataStr][hourStr];
+        }
         return next;
       });
       toast.success("Apagado!");
