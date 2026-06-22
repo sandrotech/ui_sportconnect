@@ -124,6 +124,7 @@ export function Disponibilidade() {
   const [gerarHoraFim, setGerarHoraFim] = useState("22:00");
   const [gerarEsporte, setGerarEsporte] = useState<string | undefined>(undefined);
   const [gerarPreco, setGerarPreco] = useState<number | undefined>(undefined);
+  const [gerarPublicarImediato, setGerarPublicarImediato] = useState(false);
 
   const dataStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -238,19 +239,34 @@ export function Disponibilidade() {
     }
 
     try {
-      const res = await api.horarios.saveLote(newSlots);
-      setSchedule(prev => {
-        const next = { ...prev };
-        next[selectedQuadraId] = { ...next[selectedQuadraId] };
-        next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
-        res.forEach((s: any) => {
-          const hString = String(s.horaInicio).includes(":") ? s.horaInicio : `${String(s.horaInicio).padStart(2, '0')}:00`;
-          next[selectedQuadraId][dataStr][hString] = s;
+      if (gerarPublicarImediato) {
+        const res = await api.horarios.saveLote(newSlots);
+        setSchedule(prev => {
+          const next = { ...prev };
+          next[selectedQuadraId] = { ...next[selectedQuadraId] };
+          next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+          res.forEach((s: any) => {
+            const hString = String(s.horaInicio).includes(":") ? s.horaInicio : `${String(s.horaInicio).padStart(2, '0')}:00`;
+            next[selectedQuadraId][dataStr][hString] = s;
+          });
+          return next;
         });
-        return next;
-      });
+        toast.success("Grade gerada e publicada!");
+      } else {
+        setSchedule(prev => {
+          const next = { ...prev };
+          next[selectedQuadraId] = { ...next[selectedQuadraId] };
+          next[selectedQuadraId][dataStr] = { ...next[selectedQuadraId][dataStr] };
+          newSlots.forEach(s => {
+            const hString = `${String(s.horaInicio).padStart(2, '0')}:00`;
+            next[selectedQuadraId][dataStr][hString] = s;
+          });
+          return next;
+        });
+        setHasChanges(true);
+        toast.success("Grade gerada na tela! Lembre-se de clicar em Publicar para salvar.");
+      }
       setGerarGradeOpen(false);
-      toast.success("Grade gerada!");
     } catch { toast.error("Erro ao gerar grade"); }
   }
 
@@ -632,6 +648,7 @@ export function Disponibilidade() {
                     setGerarHoraFim(horaFechamento || "22:00");
                     setGerarEsporte(undefined);
                     setGerarPreco(undefined);
+                    setGerarPublicarImediato(false);
                     setGerarGradeOpen(true);
                   }}>Gerar Grade Padrão</Button>
                   <Button variant="outline" onClick={openEditorNovo}>Adicionar Horário</Button>
@@ -975,6 +992,17 @@ export function Disponibilidade() {
                     placeholder="Ex: 80"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2 w-full mt-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <Checkbox 
+                  id="publicarImediato" 
+                  checked={gerarPublicarImediato} 
+                  onCheckedChange={(c) => setGerarPublicarImediato(!!c)} 
+                />
+                <label htmlFor="publicarImediato" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Publicar horários gerados imediatamente
+                </label>
               </div>
             </div>
             <DialogFooter className="flex gap-2">
