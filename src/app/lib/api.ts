@@ -32,7 +32,7 @@ export const api = {
   horarios: {
     byQuadra: (quadraId: number) => request('GET', `/horarios/quadra/${quadraId}`),
     saveLote: (slots: unknown[]) => request('PUT', '/horarios/lote', { slots }),
-    deleteSlot: (id: number) => request('DELETE', `/horarios/${id}`),
+    deleteSlot: (id: number, force = false) => request('DELETE', `/horarios/${id}${force ? '?force=true' : ''}`),
     publico: (arenaId: number) => request('GET', `/horarios/publico/${arenaId}`),
   },
 

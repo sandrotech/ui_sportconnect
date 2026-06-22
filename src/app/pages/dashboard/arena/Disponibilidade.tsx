@@ -111,6 +111,13 @@ export function Disponibilidade() {
   const [deleteQuadraOpen, setDeleteQuadraOpen] = useState(false);
   const [quadraToDelete, setQuadraToDelete] = useState<number | null>(null);
 
+  // Novos estados para o modal de Replicação Dinâmica
+  const [replicationModalOpen, setReplicationModalOpen] = useState(false);
+  const [replicationOriginDate, setReplicationOriginDate] = useState<Date | undefined>(undefined);
+  const [selectedReplicationDates, setSelectedReplicationDates] = useState<Date[]>([]);
+  const [replicationOverwrite, setReplicationOverwrite] = useState(false);
+
+
   const dataStr = format(selectedDate, "yyyy-MM-dd");
 
   useEffect(() => {
@@ -264,9 +271,21 @@ export function Disponibilidade() {
   }
 
   async function handleDeleteSlot(hourStr: string) {
-    if (!selectedQuadraId || !selectedMap[hourStr]?.id) return;
+    const slot = selectedMap[hourStr];
+    if (!selectedQuadraId || !slot?.id) return;
+
+    const isReserved = slot.reservas && slot.reservas.length > 0;
+    let force = false;
+    if (isReserved) {
+      const confirmCancel = window.confirm(
+        "Este horário possui agendamentos ativos. Deseja cancelar os agendamentos e excluir o horário definitivamente?"
+      );
+      if (!confirmCancel) return;
+      force = true;
+    }
+
     try {
-      await api.horarios.deleteSlot(selectedMap[hourStr]!.id!);
+      await api.horarios.deleteSlot(slot.id, force);
       setSchedule(prev => {
         const next = { ...prev };
         delete next[selectedQuadraId][dataStr][hourStr];
@@ -296,39 +315,51 @@ export function Disponibilidade() {
     } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
   }
 
-  function replicateToRestOfMonth() {
+  function applyDynamicReplication() {
     if (!selectedQuadraId) return;
-    const currentSlots = Object.values(selectedMap).filter(Boolean) as HorarioSlot[];
-    if (currentSlots.length === 0) return toast.error("Configure o dia atual antes de replicar");
+    if (!replicationOriginDate) return toast.error("Selecione o dia de origem");
+    if (selectedReplicationDates.length === 0) return toast.error("Selecione ao menos um dia de destino no calendário");
+    
+    const originStr = format(replicationOriginDate, "yyyy-MM-dd");
+    const originMap = schedule[selectedQuadraId]?.[originStr] || {};
+    const currentSlots = Object.values(originMap).filter(Boolean) as HorarioSlot[];
 
-    const today = selectedDate;
-    const end = endOfMonth(today);
-    const daysToReplicate = eachDayOfInterval({ start: new Date(today.getTime() + 86400000), end });
-
-    if (daysToReplicate.length === 0) return toast.info("Não há dias restantes no mês");
+    if (currentSlots.length === 0) {
+      return toast.error("O dia de origem selecionado não possui horários configurados.");
+    }
 
     setSchedule(prev => {
       const next = { ...prev };
       next[selectedQuadraId] = { ...next[selectedQuadraId] };
-      let newChanges = 0;
-
-      for (const d of daysToReplicate) {
+      
+      for (const d of selectedReplicationDates) {
         const dStr = format(d, "yyyy-MM-dd");
+        if (dStr === originStr) continue; // Evita replicar sobre a própria origem
+        
         if (!next[selectedQuadraId][dStr]) next[selectedQuadraId][dStr] = {};
         
+        if (replicationOverwrite) {
+            next[selectedQuadraId][dStr] = {};
+        }
+        
         for (const slot of currentSlots) {
-          next[selectedQuadraId][dStr][slot.horaInicio] = {
+          const hStr = String(slot.horaInicio).includes(":") ? slot.horaInicio : `${String(slot.horaInicio).padStart(2, '0')}:00`;
+          if (!replicationOverwrite && next[selectedQuadraId][dStr][hStr]) {
+            continue;
+          }
+          next[selectedQuadraId][dStr][hStr] = {
             ...slot,
             data: dStr,
-            id: undefined // force new insert logic on backend/upsert
+            id: undefined // Remove o ID para que a API trate como um novo horário
           };
-          newChanges++;
         }
       }
       setHasChanges(true);
       return next;
     });
-    toast.success(`Configurações replicadas para ${daysToReplicate.length} dias! Clique em Salvar para efetivar.`);
+    
+    toast.success(`Grade replicada para ${selectedReplicationDates.length} dia(s)! Clique em Salvar para efetivar.`);
+    setReplicationModalOpen(false);
   }
 
   async function criarQuadra() {
@@ -507,7 +538,12 @@ export function Disponibilidade() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => setNovaQuadraOpen(true)}><PlusCircle className="w-4 h-4 mr-1" />Nova Quadra</Button>
           <Button variant="outline" onClick={() => setBatchMode(v => !v)}>Aplicar em lote</Button>
-          <Button variant="secondary" onClick={replicateToRestOfMonth}><Copy className="w-4 h-4 mr-1" />Replicar pro Mês</Button>
+          <Button variant="secondary" onClick={() => {
+             setReplicationOriginDate(selectedDate);
+             setSelectedReplicationDates([]);
+             setReplicationOverwrite(false);
+             setReplicationModalOpen(true);
+          }}><Copy className="w-4 h-4 mr-1" />Replicar Grade</Button>
           <Button className="bg-green-600 text-white disabled:opacity-50" disabled={!hasChanges || saving} onClick={publish}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />} Publicar
           </Button>
@@ -631,9 +667,7 @@ export function Disponibilidade() {
                     }}>
                       {isAvailable ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                     </Button>
-                    {!isReserved && (
-                      <Button variant="destructive" size="icon" onClick={() => handleDeleteSlot(hourStr)}><Trash2 className="w-4 h-4" /></Button>
-                    )}
+                     <Button variant="destructive" size="icon" onClick={() => handleDeleteSlot(hourStr)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </div>
               );
@@ -792,6 +826,65 @@ export function Disponibilidade() {
             </DialogContent>
           </Dialog>
         </LocalErrorBoundary>
+
+        {/* Modal de Replicação Dinâmica */}
+        <Dialog open={replicationModalOpen} onOpenChange={setReplicationModalOpen}>
+          <DialogContent className="max-w-md md:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Replicar Horários</DialogTitle>
+              <DialogDescription>
+                Selecione o dia de origem para copiar os horários e, em seguida, os dias de destino para onde deseja replicar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 flex flex-col w-full gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <div className="flex flex-col items-center">
+                  <p className="text-sm font-semibold text-[#000273] mb-3 text-center">1. Selecione o dia de origem:</p>
+                  <Calendar 
+                    mode="single" 
+                    selected={replicationOriginDate} 
+                    onSelect={(d) => d && setReplicationOriginDate(d)} 
+                    locale={ptBR} 
+                    className="bg-white border rounded-2xl shadow-sm"
+                  />
+                  {replicationOriginDate && (
+                    <p className="text-xs text-gray-500 mt-2 font-medium">
+                      Origem: {format(replicationOriginDate, "dd/MM/yyyy")}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col items-center">
+                  <p className="text-sm font-semibold text-[#000273] mb-3 text-center">2. Selecione os dias de destino:</p>
+                  <Calendar 
+                    mode="multiple" 
+                    selected={selectedReplicationDates} 
+                    onSelect={(dates) => setSelectedReplicationDates(dates || [])} 
+                    locale={ptBR} 
+                    className="bg-white border rounded-2xl shadow-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                    Selecionados: {selectedReplicationDates.length} dia(s)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 w-full mt-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <Checkbox 
+                  id="overwrite" 
+                  checked={replicationOverwrite} 
+                  onCheckedChange={(c) => setReplicationOverwrite(!!c)} 
+                />
+                <label htmlFor="overwrite" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Sobrescrever horários existentes nesses dias
+                </label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReplicationModalOpen(false)}>Cancelar</Button>
+              <Button onClick={applyDynamicReplication}><Copy className="w-4 h-4 mr-2"/> Replicar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </motion.div>
   );
 }
