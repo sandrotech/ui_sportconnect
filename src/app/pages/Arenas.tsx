@@ -32,7 +32,7 @@ export function Arenas() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <section className="relative py-20 lg:py-32 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col justify-center py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-r from-[#000273] to-[#000273]/90 mix-blend-multiply" />
           <img 
@@ -78,34 +78,24 @@ export function Arenas() {
         </div>
       </section>
 
-      <section className="py-10 bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { label: 'Arenas Parceiras', value: '100+' },
-              { label: 'Atletas Ativos', value: '50k+' },
-              { label: 'Reservas/Mês', value: '15k+' },
-              { label: 'Faturamento Extra', value: '30%' },
-            ].map((stat, i) => (
-              <div key={i}>
-                <p className="text-3xl font-bold text-[#000273] mb-1">{stat.value}</p>
-                <p className="text-sm text-gray-600 uppercase tracking-wider">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <section id="beneficios" className="py-20 bg-gray-50">
+
+      <section id="beneficios" className="min-h-screen flex flex-col justify-center py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
             <h2 className="font-montserrat font-bold text-3xl md:text-4xl text-[#000273] mb-4">
               Por que trazer sua arena para o SportConnect?
             </h2>
             <p className="text-lg text-gray-600">
               Mais do que um sistema de agendamento, somos um ecossistema focado no sucesso do seu negócio esportivo.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
@@ -132,18 +122,24 @@ export function Arenas() {
         </div>
       </section>
 
-      <section className="py-20 bg-white overflow-hidden">
-        <div className="container mx-auto px-4">
+      <section className="min-h-screen flex flex-col justify-center py-20 bg-white overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="container mx-auto px-4"
+        >
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="lg:w-1/2">
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-[#004ef9] to-[#0066ff] rounded-3xl opacity-20 blur-xl" />
                 <img 
-                  src="https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=dashboard+interface+on+laptop+screen+showing+sports+analytics+and+schedule&image_size=landscape_4_3" 
+                  src="/images/dashboard-laptop.png" 
                   alt="Dashboard Preview" 
                   className="relative rounded-2xl shadow-2xl w-full border border-gray-100"
                 />
-                <div className="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-xl border border-gray-100 flex items-center gap-3 animate-bounce-slow">
+                <div className="absolute -bottom-4 right-2 sm:-bottom-6 sm:-right-6 bg-white p-3 sm:p-4 rounded-xl shadow-xl border border-gray-100 flex items-center gap-3 animate-bounce-slow">
                   <div className="bg-green-100 p-2 rounded-full">
                     <TrendingUp className="w-6 h-6 text-green-600" />
                   </div>
@@ -183,26 +179,21 @@ export function Arenas() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-500 mb-8 font-medium">Junte-se às melhores arenas de Fortaleza</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-             <img src="/logo/horizontal/png_sem_fundo/1.png" alt="SportConnect" className="h-12 object-contain" />
-             <div className="h-8 w-32 bg-gray-300 rounded opacity-50"></div>
-             <div className="h-10 w-28 bg-gray-300 rounded opacity-50"></div>
-             <div className="h-8 w-36 bg-gray-300 rounded opacity-50"></div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-20 bg-[#000273] relative overflow-hidden">
+      <section className="min-h-[80vh] flex flex-col justify-center py-20 bg-gradient-to-b from-[#000273] to-[#000140] relative overflow-hidden border-b border-white/10">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#004ef9] rounded-full mix-blend-screen filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#ff4b00] rounded-full mix-blend-screen filter blur-3xl opacity-20 -translate-x-1/2 translate-y-1/2" />
         
-        <div className="container mx-auto px-4 relative z-10 text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="container mx-auto px-4 relative z-10 text-center"
+        >
           <h2 className="font-montserrat font-bold text-3xl md:text-5xl text-white mb-6">
             Pronto para transformar sua arena?
           </h2>
@@ -223,7 +214,7 @@ export function Arenas() {
               Falar com Consultor
             </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <Footer />

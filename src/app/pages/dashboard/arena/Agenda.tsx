@@ -16,7 +16,8 @@ type Reserva = {
   data: string;
   status: string;
   esporte: string;
-  horarioSlot: { horaInicio: number; duracao: number };
+  horarioSlot: { id?: number; horaInicio: number; duracao: number };
+  horarioSlotId?: number;
   quadra: { nome: string };
   atletaUser?: { name: string; email: string };
   nomeCliente?: string;
@@ -24,7 +25,7 @@ type Reserva = {
 };
 
 type Quadra = { id: number; nome: string; esportes: string[] };
-type HorarioSlot = { id: number; data: string; horaInicio: number; disponivel: boolean; esporte?: string };
+type HorarioSlot = { id: number; quadraId?: number; data: string; horaInicio: number; disponivel: boolean; esporte?: string };
 
 export function Agenda() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -38,7 +39,7 @@ export function Agenda() {
   
   const [novaReservaQuadra, setNovaReservaQuadra] = useState<string>("");
   const [novaReservaData, setNovaReservaData] = useState<Date>(new Date());
-  const [novaReservaSlotId, setNovaReservaSlotId] = useState<string>("");
+  const [novaReservaSlotIds, setNovaReservaSlotIds] = useState<string[]>([]);
   const [novaReservaCpf, setNovaReservaCpf] = useState("");
   const [novaReservaNome, setNovaReservaNome] = useState("");
   const [novaReservaTelefone, setNovaReservaTelefone] = useState("");
@@ -46,20 +47,39 @@ export function Agenda() {
   const [savingManual, setSavingManual] = useState(false);
   const [buscandoCpf, setBuscandoCpf] = useState(false);
 
+  const [todosSlots, setTodosSlots] = useState<HorarioSlot[]>([]);
+
   useEffect(() => {
-    fetchAgenda();
-    api.quadras.minhas().then(data => setQuadras(data || []));
+    fetchAgendaEHorarios();
   }, []);
 
-  async function fetchAgenda() {
+  async function fetchAgendaEHorarios() {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await api.reservas.daArena();
-      setReservas(res || []);
+      const resReservas = await api.reservas.daArena();
+      setReservas(resReservas || []);
+      
+      const resQuadras = await api.quadras.minhas();
+      setQuadras(resQuadras || []);
+      
+      if (resQuadras && resQuadras.length > 0) {
+        const slotsPromises = resQuadras.map((q: Quadra) => api.horarios.byQuadra(q.id));
+        const results = await Promise.all(slotsPromises);
+        setTodosSlots(results.flat());
+      }
     } catch (err) {
       console.error("Erro ao carregar agenda", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchAgenda() {
+    try {
+      const res = await api.reservas.daArena();
+      setReservas(res || []);
+    } catch (err) {
+      console.error("Erro ao carregar agenda", err);
     }
   }
 
@@ -71,14 +91,31 @@ export function Agenda() {
         // Filtra os slots disponíveis para aquela data
         const slotsDoDia = slots.filter(s => s.data === dataStr && s.disponivel);
         setSlotsDisponiveis(slotsDoDia);
-        setNovaReservaSlotId("");
+        setNovaReservaSlotIds([]);
       });
     } else {
       setSlotsDisponiveis([]);
     }
   }, [novaReservaQuadra, novaReservaData]);
 
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
   const reservasDoDia = reservas.filter((r) => isSameDay(parseISO(r.data), selectedDate));
+  const slotsDoDia = todosSlots.filter(s => s.data === dateStr && s.disponivel);
+
+  const itemsAgenda = slotsDoDia.map(slot => {
+    const reserva = reservasDoDia.find(r => r.horarioSlot?.id === slot.id || r.horarioSlotId === slot.id);
+    return { slot, reserva };
+  });
+
+  const slotsIdsComReserva = itemsAgenda.filter(i => i.reserva).map(i => i.reserva!.id);
+  const orphanReservas = reservasDoDia.filter(r => !slotsIdsComReserva.includes(r.id)).map(r => ({ slot: null, reserva: r }));
+
+  const combinedItems = [...itemsAgenda, ...orphanReservas];
+  combinedItems.sort((a, b) => {
+    const horaA = a.slot?.horaInicio ?? a.reserva?.horarioSlot?.horaInicio ?? 0;
+    const horaB = b.slot?.horaInicio ?? b.reserva?.horarioSlot?.horaInicio ?? 0;
+    return horaA - horaB;
+  });
 
   const statusColors: Record<string, string> = {
     CONFIRMADA: "bg-green-100 text-green-700",
@@ -89,11 +126,22 @@ export function Agenda() {
   function openNovaReserva() {
     setNovaReservaData(selectedDate);
     setNovaReservaQuadra("");
-    setNovaReservaSlotId("");
+    setNovaReservaSlotIds([]);
     setNovaReservaCpf("");
     setNovaReservaNome("");
     setNovaReservaTelefone("");
     setNovaReservaEsporte("");
+    setModalOpen(true);
+  }
+
+  function openReservaParaSlot(slot: HorarioSlot) {
+    setNovaReservaData(selectedDate);
+    setNovaReservaQuadra(slot.quadraId?.toString() || "");
+    setNovaReservaSlotIds([slot.id.toString()]);
+    setNovaReservaCpf("");
+    setNovaReservaNome("");
+    setNovaReservaTelefone("");
+    setNovaReservaEsporte(slot.esporte || "");
     setModalOpen(true);
   }
 
@@ -115,24 +163,30 @@ export function Agenda() {
   }
 
   async function handleCriarManual() {
-    if (!novaReservaQuadra || !novaReservaSlotId || !novaReservaNome || !novaReservaEsporte) {
+    if (!novaReservaQuadra || novaReservaSlotIds.length === 0 || !novaReservaNome || !novaReservaEsporte) {
       return toast.error("Preencha todos os campos obrigatórios");
     }
     try {
       setSavingManual(true);
       const dataFormatada = format(novaReservaData, "yyyy-MM-dd");
-      await api.reservas.criarManual({
-        quadraId: Number(novaReservaQuadra),
-        horarioSlotId: Number(novaReservaSlotId),
-        data: dataFormatada,
-        esporte: novaReservaEsporte,
-        nomeCliente: novaReservaNome,
-        telefoneCliente: novaReservaTelefone,
-        cpfCliente: novaReservaCpf || undefined
-      });
-      toast.success("Reserva manual criada com sucesso!");
+      
+      const promises = novaReservaSlotIds.map(slotId => 
+        api.reservas.criarManual({
+          quadraId: Number(novaReservaQuadra),
+          horarioSlotId: Number(slotId),
+          data: dataFormatada,
+          esporte: novaReservaEsporte,
+          nomeCliente: novaReservaNome,
+          telefoneCliente: novaReservaTelefone,
+          cpfCliente: novaReservaCpf || undefined
+        })
+      );
+      
+      await Promise.all(promises);
+
+      toast.success(novaReservaSlotIds.length > 1 ? "Reservas criadas com sucesso!" : "Reserva criada com sucesso!");
       setModalOpen(false);
-      fetchAgenda(); // Recarrega a agenda
+      fetchAgendaEHorarios(); // Recarrega a agenda
     } catch (e: any) {
       toast.error(e.message || "Erro ao criar reserva manual");
     } finally {
@@ -144,7 +198,7 @@ export function Agenda() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Agenda e Reservas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Alterar para testes</h2>
           <p className="text-muted-foreground">
             Gerencie as reservas da sua arena por dia.
           </p>
@@ -175,7 +229,7 @@ export function Agenda() {
               {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </h3>
             <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-              {reservasDoDia.length} {reservasDoDia.length === 1 ? "reserva" : "reservas"}
+              {combinedItems.length} {combinedItems.length === 1 ? "horário" : "horários"}
             </span>
           </div>
 
@@ -183,14 +237,64 @@ export function Agenda() {
             <div className="flex justify-center p-12">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
-          ) : reservasDoDia.length === 0 ? (
+          ) : combinedItems.length === 0 ? (
             <div className="bg-gray-50 border border-dashed rounded-xl p-12 text-center text-gray-500">
               <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p>Nenhuma reserva para este dia.</p>
+              <p>Nenhuma agenda ou horário publicado para este dia.</p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {reservasDoDia.map((reserva, idx) => {
+              {combinedItems.map((item, idx) => {
+                if (!item.reserva && item.slot) {
+                  // Horário Livre
+                  const quadra = quadras.find(q => q.id === item.slot!.quadraId);
+                  return (
+                    <motion.div
+                      key={`slot-${item.slot.id}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="bg-gray-50/50 p-4 rounded-xl border border-dashed shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gray-100 p-3 rounded-lg flex flex-col items-center justify-center min-w-[70px]">
+                          <span className="font-bold text-lg text-gray-500">
+                            {String(item.slot.horaInicio).padStart(2, "0")}:00
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-500 flex items-center gap-2">
+                            Livre
+                          </h4>
+                          <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {quadra?.nome || "Quadra Removida"}
+                            </span>
+                            {item.slot.esporte && (
+                              <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-medium text-gray-500">
+                                {item.slot.esporte}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-primary border-primary/20 hover:bg-primary/5"
+                          onClick={() => openReservaParaSlot(item.slot!)}
+                        >
+                          <Plus className="w-4 h-4 mr-1" /> Reservar
+                        </Button>
+                      </div>
+                    </motion.div>
+                  );
+                }
+
+                // Horário Reservado
+                const reserva = item.reserva!;
                 const nomeExibicao = reserva.nomeCliente || reserva.atletaUser?.name || "Cliente não identificado";
                 const isManual = !reserva.atletaUser && !!reserva.nomeCliente;
 
@@ -292,7 +396,7 @@ export function Agenda() {
 
       {/* Modal de Reserva Manual */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Nova Reserva Manual</DialogTitle>
           </DialogHeader>
@@ -345,19 +449,42 @@ export function Agenda() {
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-medium">Horário *</label>
-                <Select value={novaReservaSlotId} onValueChange={setNovaReservaSlotId} disabled={!novaReservaQuadra || slotsDisponiveis.length === 0}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={slotsDisponiveis.length === 0 && novaReservaQuadra ? "Sem horários" : "Selecione..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {slotsDisponiveis.map(slot => (
-                      <SelectItem key={slot.id} value={slot.id.toString()}>
-                        {String(slot.horaInicio).padStart(2, "0")}:00
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium">Horários (Selecione um ou mais) *</label>
+                {!novaReservaQuadra ? (
+                  <div className="text-sm text-gray-500 italic p-3 border rounded-md bg-gray-50 text-center">
+                    Selecione uma quadra primeiro
+                  </div>
+                ) : slotsDisponiveis.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic p-3 border rounded-md bg-gray-50 text-center">
+                    Sem horários livres nesta data
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {slotsDisponiveis.map(slot => {
+                      const isSelected = novaReservaSlotIds.includes(slot.id.toString());
+                      return (
+                        <button
+                          type="button"
+                          key={slot.id}
+                          onClick={() => {
+                            setNovaReservaSlotIds(prev => 
+                              prev.includes(slot.id.toString()) 
+                                ? prev.filter(id => id !== slot.id.toString())
+                                : [...prev, slot.id.toString()]
+                            );
+                          }}
+                          className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${
+                            isSelected 
+                              ? "bg-primary text-white border-primary" 
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {String(slot.horaInicio).padStart(2, "0")}:00
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

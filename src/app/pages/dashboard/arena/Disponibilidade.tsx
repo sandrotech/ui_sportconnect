@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, Edit2, Lock, Unlock, Clock, DollarSign, Save, ChevronLeft,
+  Plus, Edit2, Edit3, Lock, Unlock, Clock, DollarSign, Save, ChevronLeft,
   MoreHorizontal, CheckSquare, Loader2, PlusCircle, Calendar as CalendarIcon,
-  Copy, Trash2
+  Copy, Trash2, X
 } from "lucide-react";
 import { format, isBefore, startOfToday, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "../../../components/ui/calendar";
 import { useIsMobile } from "../../../components/ui/use-mobile";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "../../../components/ui/drawer";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../../../components/ui/select";
@@ -18,11 +18,35 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group";
 import { cn } from "../../../components/ui/utils";
 import { toast } from "sonner";
+import React from "react";
+
+class LocalErrorBoundary extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-[9999] bg-white p-8 overflow-auto flex flex-col items-start justify-start">
+          <h1 className="text-red-600 text-2xl font-bold mb-4">CRASH REPORT</h1>
+          <pre className="text-sm bg-gray-100 p-4 rounded w-full whitespace-pre-wrap text-black">{this.state.error?.message}</pre>
+          <pre className="text-xs bg-gray-200 p-4 rounded w-full whitespace-pre-wrap text-black mt-4">{this.state.error?.stack}</pre>
+          <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded" onClick={() => this.setState({ hasError: false, error: null })}>Tentar Novamente</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { api } from "@/app/lib/api";
 
 type Quadra = { id: number; nome: string; esportes: string[]; descricao?: string; ativa: boolean };
 type HorarioSlot = {
-  id?: number; quadraId?: number; data: string; horaInicio: string;
+  id?: number; quadraId?: number; data: string; horaInicio: string | number;
   disponivel: boolean; preco?: number; esporte?: string; duracao: number; intervalo: number;
   reservas?: { status: string }[];
 };
@@ -37,8 +61,8 @@ export function Disponibilidade() {
   useEffect(() => {
     const originalError = console.error;
     console.error = (...args) => {
-      if (args[0] && typeof args[0] === "string" && args[0].includes("The above error occurred in the")) {
-        // Ignora o log secundário
+      if (args[0] && typeof args[0] === "string" && (args[0].includes("The above error occurred in the") || args[0].includes("Warning:"))) {
+        // Ignora warnings e logs secundários
       } else {
         setRenderError(args.join(" "));
       }
@@ -51,10 +75,6 @@ export function Disponibilidade() {
       window.removeEventListener("error", handleError);
     };
   }, []);
-
-  if (renderError) {
-    return <div className="p-10 text-red-500 font-bold font-mono">Erro no React: {renderError}</div>;
-  }
 
   const [quadras, setQuadras] = useState<Quadra[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -87,6 +107,9 @@ export function Disponibilidade() {
   const [novaQuadraNome, setNovaQuadraNome] = useState("");
   const [novaQuadraEsportes, setNovaQuadraEsportes] = useState<string[]>([]);
   const [novaQuadraDesc, setNovaQuadraDesc] = useState("");
+
+  const [deleteQuadraOpen, setDeleteQuadraOpen] = useState(false);
+  const [quadraToDelete, setQuadraToDelete] = useState<number | null>(null);
 
   const dataStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -178,7 +201,7 @@ export function Disponibilidade() {
         newSlots.push({
           quadraId: selectedQuadraId,
           data: dataStr,
-          horaInicio: hStr,
+          horaInicio: i,
           disponivel: true,
           duracao: 60,
           intervalo: 10
@@ -219,7 +242,7 @@ export function Disponibilidade() {
         id: isNewSlot ? undefined : existingSlot?.id,
         quadraId: selectedQuadraId, 
         data: dataStr, 
-        horaInicio: editorHourStart, 
+        horaInicio: sH, 
         disponivel: editorStatus === "disponivel", 
         esporte: editorSport, 
         duracao: duracao, 
@@ -261,7 +284,10 @@ export function Disponibilidade() {
       const quadraSchedule = schedule[selectedQuadraId] || {};
       for (const [dataVal, horasMap] of Object.entries(quadraSchedule)) {
         for (const [hora, slot] of Object.entries(horasMap)) {
-          if (slot) allSlots.push({ ...slot, data: dataVal, horaInicio: hora });
+          if (slot) {
+             const hInt = parseInt(hora.split(":")[0], 10);
+             allSlots.push({ ...slot, data: dataVal, horaInicio: hInt });
+          }
         }
       }
       await api.horarios.saveLote(allSlots);
@@ -316,6 +342,34 @@ export function Disponibilidade() {
       setNovaQuadraNome(""); setNovaQuadraEsportes([]); setNovaQuadraDesc("");
       toast.success("Quadra criada!");
     } catch (e: any) { toast.error(e.message); }
+  }
+
+  function handleDeleteQuadra(e: React.MouseEvent, quadraId: number) {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuadraToDelete(quadraId);
+    setDeleteQuadraOpen(true);
+  }
+
+  async function confirmDeleteQuadra() {
+    if (!quadraToDelete) return;
+    try {
+      await api.quadras.remove(quadraToDelete);
+      setQuadras(prev => {
+        const novasQuadras = prev.filter(q => q.id !== quadraToDelete);
+        if (selectedQuadraId === quadraToDelete) {
+          setSelectedQuadraId(novasQuadras.length > 0 ? novasQuadras[0].id : null);
+        }
+        return novasQuadras;
+      });
+      toast.success("Quadra excluída com sucesso!");
+      setDeleteQuadraOpen(false);
+      setQuadraToDelete(null);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao excluir quadra");
+      setDeleteQuadraOpen(false);
+      setQuadraToDelete(null);
+    }
   }
 
   function toggleBatch(hourStr: string, checked: boolean) {
@@ -373,6 +427,10 @@ export function Disponibilidade() {
     return <span className="text-xs text-gray-600 font-bold">Bloqueado</span>;
   };
 
+  if (renderError) {
+    return <div className="p-10 text-red-500 font-bold font-mono">Erro no React: {renderError}</div>;
+  }
+
   if (loadingQuadras) return <div className="p-10 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-[#004ef9]" /></div>;
 
   if (quadras.length === 0) {
@@ -398,53 +456,32 @@ export function Disponibilidade() {
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Adicionar Esporte</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Ex: Futebol" 
-                      id="input-esporte"
-                      onKeyDown={e => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const val = e.currentTarget.value.trim();
-                          if (val) {
-                            const formatted = val.charAt(0).toUpperCase() + val.slice(1);
-                            if (!novaQuadraEsportes.includes(formatted)) {
-                              setNovaQuadraEsportes(prev => [...prev, formatted]);
-                            }
-                            e.currentTarget.value = "";
-                          }
-                        }
-                      }} 
-                    />
-                    <Button variant="outline" onClick={() => {
-                      const input = document.getElementById("input-esporte") as HTMLInputElement;
-                      if (input) {
-                        const val = input.value.trim();
-                        if (val) {
-                          const formatted = val.charAt(0).toUpperCase() + val.slice(1);
-                          if (!novaQuadraEsportes.includes(formatted)) {
-                            setNovaQuadraEsportes(prev => [...prev, formatted]);
-                          }
-                          input.value = "";
-                        }
-                      }
-                    }}><Plus className="w-4 h-4 mr-1"/> Adicionar</Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Digite o nome do esporte e pressione Enter.</p>
+                  <label className="text-sm font-medium">Esportes da Quadra</label>
+                  {arenaEsportes.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {arenaEsportes.map(esporte => (
+                        <div key={esporte} className="flex items-center space-x-2 border p-2 rounded-lg bg-gray-50">
+                          <Checkbox 
+                            id={`esporte-empty-${esporte}`} 
+                            checked={novaQuadraEsportes.includes(esporte)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setNovaQuadraEsportes(prev => [...prev, esporte]);
+                              } else {
+                                setNovaQuadraEsportes(prev => prev.filter(e => e !== esporte));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`esporte-empty-${esporte}`} className="text-sm font-medium cursor-pointer flex-1">
+                            {esporte}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Nenhum esporte configurado na arena. Cadastre esportes nas Configurações da Arena.</p>
+                  )}
                 </div>
-                {novaQuadraEsportes.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
-                    {novaQuadraEsportes.map(e => (
-                      <div key={e} className="flex items-center gap-1 bg-white border px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
-                        <span className="text-[#000273]">{e}</span>
-                        <button onClick={() => setNovaQuadraEsportes(prev => prev.filter(x => x !== e))} className="ml-1 text-gray-400 hover:text-red-500 transition-colors">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Descrição (Opcional)</label>
@@ -482,7 +519,12 @@ export function Disponibilidade() {
           <Calendar mode="single" selected={selectedDate} onSelect={(d) => d && setSelectedDate(d)} locale={ptBR} className="bg-white rounded-2xl border" />
           <div className="bg-white rounded-2xl p-6 border">
             {quadras.map(q => (
-              <Button key={q.id} variant={selectedQuadraId === q.id ? "default" : "outline"} className="w-full mb-2" onClick={() => setSelectedQuadraId(q.id)}>{q.nome}</Button>
+              <div key={q.id} className="flex gap-2 mb-2">
+                <Button variant={selectedQuadraId === q.id ? "default" : "outline"} className="flex-1" onClick={() => setSelectedQuadraId(q.id)}>{q.nome}</Button>
+                <Button variant="outline" className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3" onClick={(e) => handleDeleteQuadra(e, q.id)} title="Excluir Quadra">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
@@ -682,53 +724,32 @@ export function Disponibilidade() {
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Adicionar Esporte</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Ex: Futebol" 
-                      id="input-esporte-global"
-                      onKeyDown={e => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const val = e.currentTarget.value.trim();
-                          if (val) {
-                            const formatted = val.charAt(0).toUpperCase() + val.slice(1);
-                            if (!novaQuadraEsportes.includes(formatted)) {
-                              setNovaQuadraEsportes(prev => [...prev, formatted]);
-                            }
-                            e.currentTarget.value = "";
-                          }
-                        }
-                      }} 
-                    />
-                    <Button variant="outline" onClick={() => {
-                      const input = document.getElementById("input-esporte-global") as HTMLInputElement;
-                      if (input) {
-                        const val = input.value.trim();
-                        if (val) {
-                          const formatted = val.charAt(0).toUpperCase() + val.slice(1);
-                          if (!novaQuadraEsportes.includes(formatted)) {
-                            setNovaQuadraEsportes(prev => [...prev, formatted]);
-                          }
-                          input.value = "";
-                        }
-                      }
-                    }}><Plus className="w-4 h-4 mr-1"/> Adicionar</Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Digite o nome do esporte e pressione Enter.</p>
+                  <label className="text-sm font-medium">Esportes da Quadra</label>
+                  {arenaEsportes.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {arenaEsportes.map(esporte => (
+                        <div key={esporte} className="flex items-center space-x-2 border p-2 rounded-lg bg-gray-50">
+                          <Checkbox 
+                            id={`esporte-global-${esporte}`} 
+                            checked={novaQuadraEsportes.includes(esporte)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setNovaQuadraEsportes(prev => [...prev, esporte]);
+                              } else {
+                                setNovaQuadraEsportes(prev => prev.filter(e => e !== esporte));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`esporte-global-${esporte}`} className="text-sm font-medium cursor-pointer flex-1">
+                            {esporte}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Nenhum esporte configurado na arena. Cadastre esportes nas Configurações da Arena.</p>
+                  )}
                 </div>
-                {novaQuadraEsportes.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
-                    {novaQuadraEsportes.map(e => (
-                      <div key={e} className="flex items-center gap-1 bg-white border px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
-                        <span className="text-[#000273]">{e}</span>
-                        <button onClick={() => setNovaQuadraEsportes(prev => prev.filter(x => x !== e))} className="ml-1 text-gray-400 hover:text-red-500 transition-colors">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Descrição (Opcional)</label>
@@ -740,6 +761,37 @@ export function Disponibilidade() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Modal de Excluir Quadra */}
+        <LocalErrorBoundary>
+          <Dialog open={deleteQuadraOpen} onOpenChange={setDeleteQuadraOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-red-600 flex items-center gap-2">
+                  <Trash2 className="w-5 h-5" />
+                  Excluir Quadra
+                </DialogTitle>
+                <DialogDescription className="hidden">Confirmação de exclusão de quadra</DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-gray-600">
+                  Tem certeza que deseja excluir esta quadra? Esta ação não pode ser desfeita.
+                </p>
+                <p className="text-sm text-gray-500 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <strong className="text-[#000273]">Aviso:</strong> A exclusão só será permitida pelo sistema se <strong>não houver</strong> nenhum agendamento (reserva) vinculado a esta quadra.
+                </p>
+              </div>
+              <DialogFooter className="flex items-center gap-2 mt-4">
+                <Button variant="outline" onClick={() => { setDeleteQuadraOpen(false); setQuadraToDelete(null); }}>
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={confirmDeleteQuadra}>
+                  Confirmar Exclusão
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </LocalErrorBoundary>
       </motion.div>
   );
 }

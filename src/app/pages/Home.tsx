@@ -20,11 +20,8 @@ export function Home() {
 
   const sports = [
     { icon: Volleyball, name: 'Vôlei', color: 'from-blue-500 to-blue-600' },
+    { icon: Circle, name: 'Futevôlei', color: 'from-green-500 to-green-600' },
     { icon: Waves, name: 'Beach Tennis', color: 'from-orange-500 to-orange-600' },
-    { icon: Circle, name: 'Futebol', color: 'from-green-500 to-green-600' },
-    { icon: User, name: 'Natação', color: 'from-cyan-500 to-cyan-600' },
-    { icon: Target, name: 'Padel', color: 'from-purple-500 to-purple-600' },
-    { icon: Award, name: 'Basquete', color: 'from-red-500 to-red-600' },
   ];
 
   return (
@@ -144,12 +141,12 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273] mb-4">
-              Todos os Esportes
+              Modalidades em Destaque
             </h2>
             <p className="text-xl text-gray-600">Encontre sua modalidade favorita</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {sports.map((sport, index) => (
               <motion.div
                 key={index}

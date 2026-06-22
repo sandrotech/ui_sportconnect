@@ -81,23 +81,7 @@ export function Atletas() {
         </div>
       </section>
 
-      <section className="py-10 bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { label: 'Arenas Disponíveis', value: '1.000+' },
-              { label: 'Grupos Ativos', value: '420+' },
-              { label: 'Jogos Agendados', value: '18k/mês' },
-              { label: 'Satisfação', value: '4.9/5' },
-            ].map((stat, i) => (
-              <div key={i}>
-                <p className="text-3xl font-bold text-[#000273] mb-1">{stat.value}</p>
-                <p className="text-sm text-gray-600 uppercase tracking-wider">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       <section id="beneficios" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -222,64 +206,9 @@ export function Atletas() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="lg:w-1/2">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-[#004ef9] to-[#0066ff] rounded-3xl opacity-20 blur-xl" />
-                <img
-                  src="https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=group+of+athletes+celebrating+in+indoor+court+photorealistic&image_size=landscape_4_3"
-                  alt="Comunidade de atletas"
-                  className="relative rounded-2xl shadow-2xl w-full border border-gray-100"
-                />
-              </div>
-            </div>
-            <div className="lg:w-1/2">
-              <h2 className="font-montserrat font-bold text-3xl md:text-4xl text-[#000273] mb-6">
-                Conheça novos grupos e jogue com mais frequência
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Descubra comunidades ativas por modalidade, nível e região. Entre em grupos abertos ou crie o seu.
-              </p>
-              <div className="space-y-4">
-                {groupCards.map((group) => (
-                  <div key={group.name} className="flex items-center justify-between bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <div>
-                      <p className="font-semibold text-[#000273]">{group.name}</p>
-                      <p className="text-sm text-gray-500">{group.members}</p>
-                    </div>
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#004ef9]" />
-                      {group.nextGame}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-8">
-                <Link
-                  to="/cadastro"
-                  className="inline-flex items-center gap-2 text-[#004ef9] font-semibold hover:gap-4 transition-all"
-                >
-                  Conhecer grupos agora <ArrowRight className="w-5 h-5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-500 mb-8 font-medium">A comunidade que mais cresce em Fortaleza</p>
-          <div className="flex flex-wrap justify-center items-center gap-10 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-            <img src="/logo/horizontal/png_sem_fundo/1.png" alt="SportConnect" className="h-12 object-contain" />
-            <img src="/logo/horizontal/png_sem_fundo/2.png" alt="SportConnect" className="h-10 object-contain" />
-            <img src="/logo/horizontal/png_sem_fundo/3.png" alt="SportConnect" className="h-10 object-contain" />
-            <div className="h-8 w-32 bg-gray-300 rounded opacity-50" />
-          </div>
-        </div>
-      </section>
+
+
 
       <section className="py-20 bg-[#000273] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#004ef9] rounded-full mix-blend-screen filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2" />

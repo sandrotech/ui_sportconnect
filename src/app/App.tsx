@@ -1,7 +1,9 @@
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { RouteChangeLoader } from './components/RouteChangeLoader';
@@ -278,7 +280,7 @@ function Profissionais() {
           >
             Comece a Receber Oportunidades
           </motion.h2>
-          <p className="text-white/80 mt-2">Mais de 3.400 profissionais já estão conectados. Cadastro gratuito!</p>
+
           <div className="mt-6 flex items-center justify-center gap-4">
             <a href="/cadastro" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff4b00] to-[#ff6b00] text-white font-semibold hover:shadow-lg transition-all">
               Cadastrar Gratuitamente
@@ -795,6 +797,47 @@ function Parceiros() {
 }
 
 function Contato() {
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    assunto: '',
+    mensagem: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nome || !formData.email || !formData.assunto || !formData.mensagem) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('http://localhost:3000/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Mensagem enviada com sucesso!');
+        setFormData({ nome: '', email: '', assunto: '', mensagem: '' });
+      } else {
+        toast.error(data.error || 'Erro ao enviar a mensagem');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro de conexão ao enviar a mensagem');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
       <Header />
@@ -811,73 +854,57 @@ function Contato() {
           <h1 className="font-montserrat italic font-semibold text-4xl md:text-5xl text-[#000273]">Fale Conosco</h1>
           <p className="text-gray-600 mt-2">Estamos aqui para ajudar você</p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          <div className="space-y-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            
+            {/* WhatsApp Card */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.05 }}
-              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="bg-white rounded-2xl p-8 shadow-lg text-center flex flex-col items-center justify-center"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004ef9] to-[#0066ff] flex items-center justify-center">
-                <Mail className="w-6 h-6 text-white" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-6">
+                <Phone className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <h3 className="font-semibold text-[#000273]">E-mail</h3>
-                <p className="text-gray-600">contato@sportconnect.com.br</p>
-              </div>
+              <h3 className="font-montserrat font-semibold text-2xl text-[#000273] mb-4">Atendimento via WhatsApp</h3>
+              <p className="text-gray-600 mb-8">
+                Precisa de uma resposta rápida? Fale diretamente com a nossa equipe pelo WhatsApp.
+              </p>
+              <a 
+                href="https://wa.me/5585994231753" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold hover:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                (85) 99423-1753
+              </a>
             </motion.div>
+
+            {/* Formulario */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
-              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff4b00] to-[#ff6b00] flex items-center justify-center">
-                <Phone className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[#000273]">Telefone</h3>
-                <p className="text-gray-600">(11) 99999-9999</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.25 }}
-              className="bg-white rounded-2xl p-6 shadow-lg flex items-center gap-4"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[#000273]">Endereço</h3>
-                <p className="text-gray-600">São Paulo, SP - Brasil</p>
+              <div className="bg-white rounded-2xl p-8 shadow-lg h-full">
+                <h3 className="font-montserrat font-semibold text-xl text-[#000273] mb-2 text-center">Envie uma Mensagem</h3>
+                <p className="text-gray-600 text-sm text-center mb-6">Preencha o formulário abaixo para tirar dúvidas, dar sugestões ou relatar problemas.</p>
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <input type="text" placeholder="Seu Nome" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} />
+                  <input type="email" placeholder="Seu E-mail" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                  <input type="text" placeholder="Assunto" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" value={formData.assunto} onChange={(e) => setFormData({...formData, assunto: e.target.value})} />
+                  <textarea rows={5} placeholder="Sua Mensagem" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" value={formData.mensagem} onChange={(e) => setFormData({...formData, mensagem: e.target.value})} />
+                  <button type="submit" disabled={isSubmitting} className="w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-xl transition-all disabled:opacity-50">
+                    {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
+                  </button>
+                </form>
               </div>
             </motion.div>
           </div>
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          >
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="font-montserrat font-semibold text-xl text-[#000273] mb-6">Envie uma Mensagem</h3>
-              <form className="space-y-4">
-                <input type="text" placeholder="Seu Nome" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
-                <input type="email" placeholder="Seu E-mail" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
-                <input type="text" placeholder="Assunto" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
-                <textarea rows={5} placeholder="Sua Mensagem" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#004ef9] focus:border-transparent outline-none" />
-                <button type="submit" className="w-full py-4 rounded-xl bg-gradient-to-r from-[#004ef9] to-[#ff4b00] text-white hover:shadow-xl transition-all">
-                  Enviar Mensagem
-                </button>
-              </form>
-            </div>
-          </motion.div>
         </div>
       </div>
       <Footer />
